@@ -1,0 +1,1 @@
+Replaces the generic exclamation point icon on teammate and personal HUD panels with specific icons that show exactly what's happening. Instead of wondering why someone has an exclamation mark, you'll see if they're pounced by a hound, netted by a trapper, healing at a medicae station, or using an auspex scanner.
