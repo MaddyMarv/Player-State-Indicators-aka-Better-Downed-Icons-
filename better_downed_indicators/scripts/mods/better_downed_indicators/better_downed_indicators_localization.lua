@@ -40,7 +40,6 @@ loc.enable_background_tint = {
     en = "Enable Background Tint",
 }
 
--- Groups and Tabs
 loc.group_general = { en = "General Settings" }
 loc.tab_general = { en = "General" }
 
@@ -50,24 +49,18 @@ loc.tab_status_colors = { en = "Status Colors" }
 loc.group_aggro_colors = { en = "Aggro Colors" }
 loc.tab_aggro = { en = "Aggro Detection" }
 
--- Add color settings for each status type
--- Icons WITHOUT distinct plain versions (same path for both) get "(glowy customizable)" label
 local statuses = {
-    -- Death/Respawn states
     { "dead", "Dead (glowy customizable)" },
     { "respawning", "Respawning (glowy customizable)" },
-    -- Downed/Disabled states
     { "knocked_down", "Knocked-down" },
     { "hogtied", "Hogtied" },
     { "ledge_hanging", "Hanging" },
-    -- Enemy grab/attack states
     { "pounced", "Pounced" },
     { "netted", "Netted" },
     { "warp_grabbed", "Warp-grabbed (glowy customizable)" },
     { "consumed", "Consumed" },
     { "grabbed", "Grabbed" },
     { "mutant_charged", "Mutant-charged" },
-    -- Active/Positive states
     { "auspex", "Auspex (glowy customizable)" },
     { "luggable", "Luggable (glowy customizable)" },
     { "healing", "Healing (glowy customizable)" },
@@ -76,15 +69,12 @@ local statuses = {
 }
 
 for _, v in ipairs(statuses) do
-    -- Header title
     loc[v[1] .. "_header"] = { en = v[2] }
-    -- RGB settings
     loc[v[1] .. "_r"] = { en = "Red" }
     loc[v[1] .. "_g"] = { en = "Green" }
     loc[v[1] .. "_b"] = { en = "Blue" }
 end
 
--- Aggro Detection
 loc.aggro_header = { en = "Aggro Detection (Border Glow)" }
 loc.aggro_daemonhost_enabled = { en = "Enable Daemonhost Aggro Glow" }
 loc.aggro_monstrosity_enabled = { en = "Enable Monstrosity Aggro Glow" }

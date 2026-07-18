@@ -40,23 +40,18 @@ local widgets = {
     },
 }
 
--- Add color settings for each status type with groups
 local statuses = {
-    -- Death/Respawn states
     { "dead", green_super_light },
     { "respawning", green_super_light },
-    -- Downed/Disabled states
     { "knocked_down", red_light },
     { "hogtied", green_super_light },
     { "ledge_hanging", red_light },
-    -- Enemy grab/attack states
     { "pounced", red_light },
     { "netted", red_light },
     { "warp_grabbed", red_light },
     { "consumed", orange_light },
     { "grabbed", orange_light },
     { "mutant_charged", orange_light },
-    -- Active/Positive states
     { "auspex", green_super_light },
     { "luggable", green_super_light },
     { "healing", green_super_light },
@@ -69,7 +64,7 @@ local status_color_widgets = {}
 for _, status_data in ipairs(statuses) do
     local status_name = status_data[1]
     local default_color = status_data[2]
-    
+
     table.insert(status_color_widgets, {
         setting_id = status_name .. "_header",
         type = "group",
@@ -103,7 +98,6 @@ table.insert(widgets, {
     sub_widgets = status_color_widgets,
 })
 
--- Aggro Detection Settings
 table.insert(widgets, {
     setting_id = "aggro_header",
     type = "group",
