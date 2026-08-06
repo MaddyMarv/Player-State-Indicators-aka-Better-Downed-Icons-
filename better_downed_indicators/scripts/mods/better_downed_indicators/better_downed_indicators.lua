@@ -639,7 +639,6 @@ mod:hook("HudElementTeamPlayerPanel", "_update_player_features", function(func, 
     apply_aggro_glow(self, player)
 end)
 
-
 mod.update = function(dt)
     if mod._game_state_init_timer then
         mod._game_state_init_timer = mod._game_state_init_timer - dt
@@ -806,6 +805,84 @@ mod:hook("InteractorExtension", "reset_interaction", function(func, self, reset_
     end
 
     func(self, reset_focus_unit)
+end)
+
+mod:hook_require("scripts/ui/hud/elements/world_markers/templates/world_marker_template_player_assistance", function(template)
+    local orig_update = template.update_function
+    if type(orig_update) == "function" then
+        template.update_function = function(parent, ui_renderer, widget, marker, tpl, dt, t)
+            local result = orig_update(parent, ui_renderer, widget, marker, tpl, dt, t)
+            
+            local unit = marker.unit
+            if not unit then return result end
+            
+            local detected_status = Status.for_unit(unit)
+            if not detected_status then return result end
+            
+
+            local is_active_downed = detected_status == "pounced" or detected_status == "netted" or 
+                                     detected_status == "mutant_charged" or detected_status == "ledge_hanging" or 
+                                     detected_status == "knocked_down" or detected_status == "consumed" or 
+                                     detected_status == "grabbed" or detected_status == "warp_grabbed"
+                                     
+            if not is_active_downed then return result end
+            
+            local icon_style = mod:get("floating_icon_style") or "glowing"
+            local use_glowing = icon_style == "glowing"
+            local customization_mode = mod:get("floating_plain_icon_customization_mode") or "off"
+            
+            local icon_path = get_icon_path(detected_status, use_glowing, customization_mode)
+            
+            if icon_path then
+                local player = nil
+                local player_manager = Managers.player
+                if player_manager then
+                    player = player_manager:player_by_unit(unit)
+                end
+                
+                local color = get_status_color(detected_status, icon_style, customization_mode, use_glowing, player)
+                
+
+                if widget.content.icon then
+                    widget.content.icon = icon_path
+                    if widget.style.icon then
+                        if color then
+                            widget.style.icon.color[1] = color[1]
+                            widget.style.icon.color[2] = color[2]
+                            widget.style.icon.color[3] = color[3]
+                            widget.style.icon.color[4] = color[4]
+                        end
+                        widget.style.icon.size = { 65, 65 }
+                        widget.style.icon.default_size = { 65, 65 }
+                    end
+                elseif widget.content.texture then
+                    widget.content.texture = icon_path
+                    if widget.style.texture then
+                        if color then
+                            widget.style.texture.color[1] = color[1]
+                            widget.style.texture.color[2] = color[2]
+                            widget.style.texture.color[3] = color[3]
+                            widget.style.texture.color[4] = color[4]
+                        end
+                        widget.style.texture.size = { 65, 65 }
+                        widget.style.texture.default_size = { 65, 65 }
+                    end
+                end
+                
+                if widget.style then
+                    for pass_id, pass_style in pairs(widget.style) do
+                        if pass_id ~= "icon" and pass_id ~= "texture" and pass_id ~= "text" and pass_id ~= "distance" then
+                            if pass_style.color then
+                                pass_style.color[1] = 0
+                            end
+                        end
+                    end
+                end
+            end
+            
+            return result
+        end
+    end
 end)
 
 mod.on_enabled = function()

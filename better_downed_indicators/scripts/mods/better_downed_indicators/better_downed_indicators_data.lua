@@ -5,7 +5,7 @@ local orange_light = Color.ui_orange_light(255, true)
 
 local widgets = {
     {
-        setting_id = "group_general",
+        setting_id = "group_team_panels",
         type = "group",
         tab = mod:localize("tab_general"),
         sub_widgets = {
@@ -28,6 +28,35 @@ local widgets = {
             },
             {
                 setting_id = "plain_icon_customization_mode",
+                type = "dropdown",
+                default_value = "off",
+                options = {
+                    { text = "plain_icon_customization_mode_off", value = "off" },
+                    { text = "plain_icon_customization_mode_customize_all", value = "customize_all" },
+                    { text = "plain_icon_customization_mode_customize_plain_only", value = "customize_plain_only" },
+                },
+            },
+        },
+    },
+    {
+        setting_id = "group_floating_markers",
+        type = "group",
+        tab = mod:localize("tab_general"),
+        sub_widgets = {
+            {
+                setting_id = "floating_icon_style",
+                type = "dropdown",
+                default_value = "glowing",
+                options = {
+                    { text = "icon_style_option_glowing", value = "glowing" },
+                    { text = "icon_style_option_plain_white", value = "plain_white" },
+                    { text = "icon_style_option_plain_yellow", value = "plain_yellow" },
+                    { text = "icon_style_option_plain_red", value = "plain_red" },
+                    { text = "icon_style_option_plain_slot_color", value = "plain_slot_color" },
+                },
+            },
+            {
+                setting_id = "floating_plain_icon_customization_mode",
                 type = "dropdown",
                 default_value = "off",
                 options = {

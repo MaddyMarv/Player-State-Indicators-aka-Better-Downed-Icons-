@@ -40,8 +40,11 @@ loc.enable_background_tint = {
     en = "Enable Background Tint",
 }
 
-loc.group_general = { en = "General Settings" }
+loc.group_team_panels = { en = "Team Panels (Bottom Left)" }
+loc.group_floating_markers = { en = "Floating Markers (In-World)" }
 loc.tab_general = { en = "General" }
+loc.floating_icon_style = { en = "Icon Style" }
+loc.floating_plain_icon_customization_mode = { en = "Plain Icon Customization Mode" }
 
 loc.group_status_colors = { en = "Status Colors" }
 loc.tab_status_colors = { en = "Status Colors" }
