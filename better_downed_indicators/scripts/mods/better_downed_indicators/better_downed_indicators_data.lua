@@ -15,9 +15,7 @@ local widgets = {
                 default_value = "glowing",
                 options = {
                     { text = "icon_style_option_glowing", value = "glowing" },
-                    { text = "icon_style_option_plain_white", value = "plain_white" },
-                    { text = "icon_style_option_plain_yellow", value = "plain_yellow" },
-                    { text = "icon_style_option_plain_red", value = "plain_red" },
+                    { text = "icon_style_option_plain", value = "plain" },
                     { text = "icon_style_option_plain_slot_color", value = "plain_slot_color" },
                 },
             },
@@ -25,16 +23,6 @@ local widgets = {
                 setting_id = "enable_background_tint",
                 type = "checkbox",
                 default_value = true,
-            },
-            {
-                setting_id = "plain_icon_customization_mode",
-                type = "dropdown",
-                default_value = "off",
-                options = {
-                    { text = "plain_icon_customization_mode_off", value = "off" },
-                    { text = "plain_icon_customization_mode_customize_all", value = "customize_all" },
-                    { text = "plain_icon_customization_mode_customize_plain_only", value = "customize_plain_only" },
-                },
             },
         },
     },
@@ -44,43 +32,45 @@ local widgets = {
         tab = mod:localize("tab_general"),
         sub_widgets = {
             {
+                setting_id = "enable_floating_markers",
+                type = "checkbox",
+                default_value = true,
+            },
+            {
                 setting_id = "floating_icon_style",
                 type = "dropdown",
                 default_value = "glowing",
                 options = {
                     { text = "icon_style_option_glowing", value = "glowing" },
-                    { text = "icon_style_option_plain_white", value = "plain_white" },
-                    { text = "icon_style_option_plain_yellow", value = "plain_yellow" },
-                    { text = "icon_style_option_plain_red", value = "plain_red" },
+                    { text = "icon_style_option_plain", value = "plain" },
                     { text = "icon_style_option_plain_slot_color", value = "plain_slot_color" },
                 },
             },
             {
-                setting_id = "floating_plain_icon_customization_mode",
-                type = "dropdown",
-                default_value = "off",
-                options = {
-                    { text = "plain_icon_customization_mode_off", value = "off" },
-                    { text = "plain_icon_customization_mode_customize_all", value = "customize_all" },
-                    { text = "plain_icon_customization_mode_customize_plain_only", value = "customize_plain_only" },
-                },
+                setting_id = "floating_icon_size",
+                type = "numeric",
+                default_value = 65,
+                range = { 30, 100 },
             },
         },
     },
 }
 
-local statuses = {
-    { "dead", green_super_light },
-    { "respawning", green_super_light },
+local statuses_distinct = {
     { "knocked_down", red_light },
-    { "hogtied", green_super_light },
     { "ledge_hanging", red_light },
     { "pounced", red_light },
     { "netted", red_light },
-    { "warp_grabbed", red_light },
     { "consumed", orange_light },
     { "grabbed", orange_light },
     { "mutant_charged", orange_light },
+    { "hogtied", green_super_light },
+    { "dead", green_super_light },
+    { "respawning", green_super_light },
+}
+
+local statuses_plain_only = {
+    { "warp_grabbed", red_light },
     { "auspex", green_super_light },
     { "luggable", green_super_light },
     { "healing", green_super_light },
@@ -88,43 +78,56 @@ local statuses = {
     { "interacting", green_super_light },
 }
 
-local status_color_widgets = {}
+local function build_status_widgets(status_list)
+    local w = {}
+    for _, status_data in ipairs(status_list) do
+        local status_name = status_data[1]
+        local default_color = status_data[2]
 
-for _, status_data in ipairs(statuses) do
-    local status_name = status_data[1]
-    local default_color = status_data[2]
-
-    table.insert(status_color_widgets, {
-        setting_id = status_name .. "_header",
-        type = "group",
-        sub_widgets = {
-            {
-                setting_id = status_name .. "_r",
-                type = "numeric",
-                range = { 0, 255 },
-                default_value = default_color[2],
+        table.insert(w, {
+            setting_id = status_name .. "_header",
+            type = "group",
+            sub_widgets = {
+                {
+                    setting_id = status_name .. "_r",
+                    type = "numeric",
+                    range = { 0, 255 },
+                    default_value = default_color[2],
+                },
+                {
+                    setting_id = status_name .. "_g",
+                    type = "numeric",
+                    range = { 0, 255 },
+                    default_value = default_color[3],
+                },
+                {
+                    setting_id = status_name .. "_b",
+                    type = "numeric",
+                    range = { 0, 255 },
+                    default_value = default_color[4],
+                },
             },
-            {
-                setting_id = status_name .. "_g",
-                type = "numeric",
-                range = { 0, 255 },
-                default_value = default_color[3],
-            },
-            {
-                setting_id = status_name .. "_b",
-                type = "numeric",
-                range = { 0, 255 },
-                default_value = default_color[4],
-            },
-        },
-    })
+        })
+    end
+    return w
 end
 
 table.insert(widgets, {
     setting_id = "group_status_colors",
     type = "group",
     tab = mod:localize("tab_status_colors"),
-    sub_widgets = status_color_widgets,
+    sub_widgets = {
+        {
+            setting_id = "group_distinct_colors",
+            type = "group",
+            sub_widgets = build_status_widgets(statuses_distinct),
+        },
+        {
+            setting_id = "group_plain_only_colors",
+            type = "group",
+            sub_widgets = build_status_widgets(statuses_plain_only),
+        }
+    }
 })
 
 table.insert(widgets, {

@@ -12,30 +12,13 @@ loc.icon_style = {
 loc.icon_style_option_glowing = {
     en = "Glowing",
 }
-loc.icon_style_option_plain_white = {
-    en = "Plain (White)",
-}
-loc.icon_style_option_plain_yellow = {
-    en = "Plain (Yellow)",
-}
-loc.icon_style_option_plain_red = {
-    en = "Plain (Red)",
+loc.icon_style_option_plain = {
+    en = "Plain (Uses Status Colors)",
 }
 loc.icon_style_option_plain_slot_color = {
     en = "Plain (Teammate Color)",
 }
-loc.plain_icon_customization_mode = {
-    en = "Plain Icon Customization Mode",
-}
-loc.plain_icon_customization_mode_off = {
-    en = "Off (Use Style Setting)",
-}
-loc.plain_icon_customization_mode_customize_all = {
-    en = "Customize All Icons (No Glowly)",
-}
-loc.plain_icon_customization_mode_customize_plain_only = {
-    en = "Only Customize Plain Icons (Keep Glowly)",
-}
+
 loc.enable_background_tint = {
     en = "Enable Background Tint",
 }
@@ -44,31 +27,35 @@ loc.group_team_panels = { en = "Team Panels (Bottom Left)" }
 loc.group_floating_markers = { en = "Floating Markers (In-World)" }
 loc.tab_general = { en = "General" }
 loc.floating_icon_style = { en = "Icon Style" }
-loc.floating_plain_icon_customization_mode = { en = "Plain Icon Customization Mode" }
+loc.floating_icon_size = { en = "Icon Size" }
+loc.enable_floating_markers = { en = "Enable Floating Markers" }
 
 loc.group_status_colors = { en = "Status Colors" }
 loc.tab_status_colors = { en = "Status Colors" }
+loc.group_distinct_colors = { en = "Requires 'Plain' Style to Recolor" }
+loc.group_plain_only_colors = { en = "Always Recolorable (No Vanilla \"Glowly\" Version)" }
 
 loc.group_aggro_colors = { en = "Aggro Colors" }
 loc.tab_aggro = { en = "Aggro Detection" }
 
 local statuses = {
-    { "dead", "Dead (glowy customizable)" },
-    { "respawning", "Respawning (glowy customizable)" },
     { "knocked_down", "Knocked-down" },
-    { "hogtied", "Hogtied" },
     { "ledge_hanging", "Hanging" },
     { "pounced", "Pounced" },
     { "netted", "Netted" },
-    { "warp_grabbed", "Warp-grabbed (glowy customizable)" },
     { "consumed", "Consumed" },
     { "grabbed", "Grabbed" },
     { "mutant_charged", "Mutant-charged" },
-    { "auspex", "Auspex (glowy customizable)" },
-    { "luggable", "Luggable (glowy customizable)" },
-    { "healing", "Healing (glowy customizable)" },
-    { "helping", "Helping (glowy customizable)" },
-    { "interacting", "Interacting (glowy customizable)" },
+    { "hogtied", "Hogtied" },
+    { "dead", "Dead" },
+    { "respawning", "Respawning" },
+    
+    { "warp_grabbed", "Warp-grabbed" },
+    { "auspex", "Auspex" },
+    { "luggable", "Luggable" },
+    { "healing", "Healing" },
+    { "helping", "Helping" },
+    { "interacting", "Interacting" },
 }
 
 for _, v in ipairs(statuses) do

@@ -177,37 +177,20 @@ local ICONS_WITH_DISTINCT_PLAIN = {
     hogtied = true,
 }
 
-local function has_distinct_plain_version(detected_status)
-    return ICONS_WITH_DISTINCT_PLAIN[detected_status] == true
-end
 
-local function get_icon_path(detected_status, use_glowing, customization_mode)
-    if customization_mode == "customize_all" then
-        return Status.icons[detected_status]
-    elseif customization_mode == "customize_plain_only" and use_glowing and not has_distinct_plain_version(detected_status) then
+local function get_icon_path(detected_status, icon_style)
+    if icon_style == "plain" or icon_style == "plain_slot_color" then
         return Status.icons[detected_status]
     else
-        if use_glowing and Status.icons_glowing[detected_status] then
-            return Status.icons_glowing[detected_status]
-        elseif Status.icons[detected_status] then
-            return Status.icons[detected_status]
-        end
+        return Status.icons_glowing[detected_status] or Status.icons[detected_status]
     end
-    return nil
 end
 
-local function get_status_color(detected_status, icon_style, customization_mode, use_glowing, player)
-    local should_use_custom = (customization_mode == "customize_all") or
-                              (customization_mode == "customize_plain_only" and use_glowing and not has_distinct_plain_version(detected_status))
+local function get_status_color(detected_status, icon_style, player)
+    local is_plain_only = (Status.icons_glowing[detected_status] == Status.icons[detected_status])
 
-    if should_use_custom then
+    if icon_style == "plain" or (icon_style == "glowing" and is_plain_only) then
         return { 255, mod:get(detected_status .. "_r") or 255, mod:get(detected_status .. "_g") or 255, mod:get(detected_status .. "_b") or 255 }
-    elseif icon_style == "plain_white" then
-        return COLOR_WHITE
-    elseif icon_style == "plain_yellow" then
-        return COLOR_YELLOW
-    elseif icon_style == "plain_red" then
-        return COLOR_RED
     elseif icon_style == "plain_slot_color" then
         local player_slot = player and player.slot and player:slot()
         local player_slot_colors = UISettings.player_slot_colors
@@ -395,19 +378,18 @@ local function replace_status_icon(self, status_icon, status_color, ui_renderer,
     end
 
     local icon_style = mod:get("icon_style") or "glowing"
-    local use_glowing = icon_style == "glowing"
-    local customization_mode = mod:get("plain_icon_customization_mode") or "off"
-
-    local icon_path = get_icon_path(detected_status, use_glowing, customization_mode)
+    
+    local icon_path = get_icon_path(detected_status, icon_style)
+    
+    local status_color = nil
     if icon_path then
-        status_icon = icon_path
-        status_color = get_status_color(detected_status, icon_style, customization_mode, use_glowing, player)
-    elseif detected_status == "dead" or detected_status == "respawning" or detected_status == "hogtied" or detected_status == "warp_grabbed" then
-        icon_path = get_icon_path(detected_status, false, customization_mode)
-        if icon_path then
-            status_icon = icon_path
-            status_color = get_status_color(detected_status, icon_style, customization_mode, false, player)
-        end
+        status_color = get_status_color(detected_status, icon_style, player)
+    end
+    
+    if not icon_path then
+        icon_style = "plain"
+        icon_path = get_icon_path(detected_status, icon_style)
+        status_color = get_status_color(detected_status, icon_style, player)
     end
 
     return status_icon, status_color
@@ -441,14 +423,11 @@ mod:hook("HudElementPlayerPanelBase", "_set_status_icon", function(func, self, s
     end
 
     local icon_style = mod:get("icon_style") or "glowing"
-    local use_glowing = icon_style == "glowing"
-    local customization_mode = mod:get("plain_icon_customization_mode") or "off"
 
-    local icon_path = get_icon_path(detected_status, use_glowing, customization_mode)
+    local icon_path = get_icon_path(detected_status, icon_style)
     if not icon_path then
-        if detected_status == "dead" or detected_status == "respawning" or detected_status == "hogtied" or detected_status == "warp_grabbed" then
-            icon_path = get_icon_path(detected_status, false, customization_mode)
-        end
+        icon_style = "plain"
+        icon_path = get_icon_path(detected_status, icon_style)
         if not icon_path then
             local player_icon_widget = widgets_by_name and widgets_by_name.player_icon
             if player_icon_widget then
@@ -464,20 +443,18 @@ mod:hook("HudElementPlayerPanelBase", "_set_status_icon", function(func, self, s
     if texture_style then
         local is_personal_panel = self.class_name == "HudElementPersonalPlayerPanel" or (self._data and self._data.is_my_player == true)
         local base_size = is_personal_panel and ICON_SIZE_PERSONAL or ICON_SIZE_TEAM
-        local icon_size = (detected_status == "dead" or detected_status == "respawning" or detected_status == "luggable" or
-                          detected_status == "healing" or detected_status == "helping" or detected_status == "interacting") and (base_size + ICON_SIZE_OFFSET) or base_size
+        local needs_size_boost = detected_status == "luggable" or detected_status == "healing" or detected_status == "helping" or detected_status == "interacting"
+        if (detected_status == "dead" or detected_status == "respawning" or detected_status == "hogtied") and (icon_style == "plain" or icon_style == "plain_slot_color") then
+            needs_size_boost = true
+        end
+        local icon_size = needs_size_boost and (base_size + ICON_SIZE_OFFSET) or base_size
         if detected_status == "interacting" then
             icon_size = icon_size + 10
         end
         setup_texture_style(texture_style, icon_size)
 
-        local should_use_custom = (customization_mode == "customize_all") or
-                                  (customization_mode == "customize_plain_only" and use_glowing and not has_distinct_plain_version(detected_status))
-
-        if should_use_custom or not use_glowing then
-            local color = get_status_color(detected_status, icon_style, customization_mode, use_glowing, player)
-            apply_color_to_texture(texture_style, color)
-        end
+        local color = get_status_color(detected_status, icon_style, player)
+        apply_color_to_texture(texture_style, color)
     end
 
     widget.visible = true
@@ -540,16 +517,18 @@ local function update_status_icon_widget(self, player)
     end
 
     local icon_style = mod:get("icon_style") or "glowing"
-    local use_glowing = icon_style == "glowing"
-    local customization_mode = mod:get("plain_icon_customization_mode") or "off"
 
-    local icon_path = get_icon_path(detected_status, use_glowing, customization_mode)
+    local icon_path = get_icon_path(detected_status, icon_style)
     if not icon_path then
-        local player_icon_widget = widgets_by_name and widgets_by_name.player_icon
-        if player_icon_widget then
-            apply_widget_shadow(player_icon_widget, false)
+        icon_style = "plain"
+        icon_path = get_icon_path(detected_status, icon_style)
+        if not icon_path then
+            local player_icon_widget = widgets_by_name and widgets_by_name.player_icon
+            if player_icon_widget then
+                apply_widget_shadow(player_icon_widget, false)
+            end
+            return
         end
-        return
     end
 
     widget.content.texture = icon_path
@@ -558,20 +537,18 @@ local function update_status_icon_widget(self, player)
     if texture_style then
         local is_personal_panel = self.class_name == "HudElementPersonalPlayerPanel" or (self._data and self._data.is_my_player == true)
         local base_size = is_personal_panel and ICON_SIZE_PERSONAL or ICON_SIZE_TEAM
-        local icon_size = (detected_status == "dead" or detected_status == "respawning" or detected_status == "luggable" or
-                          detected_status == "healing" or detected_status == "helping" or detected_status == "interacting") and (base_size + ICON_SIZE_OFFSET) or base_size
+        local needs_size_boost = detected_status == "luggable" or detected_status == "healing" or detected_status == "helping" or detected_status == "interacting"
+        if (detected_status == "dead" or detected_status == "respawning" or detected_status == "hogtied") and (icon_style == "plain" or icon_style == "plain_slot_color") then
+            needs_size_boost = true
+        end
+        local icon_size = needs_size_boost and (base_size + ICON_SIZE_OFFSET) or base_size
         if detected_status == "interacting" then
             icon_size = icon_size + 10
         end
         setup_texture_style(texture_style, icon_size)
 
-        local should_use_custom = (customization_mode == "customize_all") or
-                                  (customization_mode == "customize_plain_only" and use_glowing and not has_distinct_plain_version(detected_status))
-
-        if should_use_custom or not use_glowing then
-            local color = get_status_color(detected_status, icon_style, customization_mode, use_glowing, player)
-            apply_color_to_texture(texture_style, color)
-        end
+        local color = get_status_color(detected_status, icon_style, player)
+        apply_color_to_texture(texture_style, color)
     end
 
     widget.visible = true
@@ -584,8 +561,10 @@ local function update_status_icon_widget(self, player)
 
     if detected_status == "auspex" or detected_status == "luggable" or
        detected_status == "healing" or detected_status == "helping" or detected_status == "interacting" then
-        local status_color = get_status_color(detected_status, icon_style, customization_mode, use_glowing, player)
-        self:_set_status_icon(icon_path, status_color, nil)
+        if icon_path then
+            local status_color = get_status_color(detected_status, icon_style, player)
+            self:_set_status_icon(icon_path, status_color, nil)
+        end
     end
 end
 
@@ -813,25 +792,74 @@ mod:hook_require("scripts/ui/hud/elements/world_markers/templates/world_marker_t
         template.update_function = function(parent, ui_renderer, widget, marker, tpl, dt, t)
             local result = orig_update(parent, ui_renderer, widget, marker, tpl, dt, t)
             
+            if not widget.bdi_vanilla_cached then
+                widget.bdi_vanilla_cached = true
+                if widget.content.icon then
+                    widget.bdi_vanilla_icon = widget.content.icon
+                    widget.bdi_vanilla_icon_color = table.clone(widget.style.icon.color)
+                    widget.bdi_vanilla_icon_size = table.clone(widget.style.icon.size)
+                    widget.bdi_vanilla_icon_default_size = table.clone(widget.style.icon.default_size)
+                elseif widget.content.texture then
+                    widget.bdi_vanilla_texture = widget.content.texture
+                    widget.bdi_vanilla_texture_color = table.clone(widget.style.texture.color)
+                    widget.bdi_vanilla_texture_size = table.clone(widget.style.texture.size)
+                    widget.bdi_vanilla_texture_default_size = table.clone(widget.style.texture.default_size)
+                end
+                widget.bdi_vanilla_pass_alphas = {}
+                if widget.style then
+                    for pass_id, pass_style in pairs(widget.style) do
+                        if pass_id ~= "icon" and pass_id ~= "texture" and pass_id ~= "text" and pass_id ~= "distance" then
+                            if pass_style.color then
+                                widget.bdi_vanilla_pass_alphas[pass_id] = pass_style.color[1]
+                            end
+                        end
+                    end
+                end
+            end
+            
+            if widget.content.icon and widget.bdi_vanilla_icon then
+                widget.content.icon = widget.bdi_vanilla_icon
+                widget.style.icon.color[1] = widget.bdi_vanilla_icon_color[1]
+                widget.style.icon.color[2] = widget.bdi_vanilla_icon_color[2]
+                widget.style.icon.color[3] = widget.bdi_vanilla_icon_color[3]
+                widget.style.icon.color[4] = widget.bdi_vanilla_icon_color[4]
+                widget.style.icon.size[1] = widget.bdi_vanilla_icon_size[1]
+                widget.style.icon.size[2] = widget.bdi_vanilla_icon_size[2]
+                widget.style.icon.default_size[1] = widget.bdi_vanilla_icon_default_size[1]
+                widget.style.icon.default_size[2] = widget.bdi_vanilla_icon_default_size[2]
+            elseif widget.content.texture and widget.bdi_vanilla_texture then
+                widget.content.texture = widget.bdi_vanilla_texture
+                widget.style.texture.color[1] = widget.bdi_vanilla_texture_color[1]
+                widget.style.texture.color[2] = widget.bdi_vanilla_texture_color[2]
+                widget.style.texture.color[3] = widget.bdi_vanilla_texture_color[3]
+                widget.style.texture.color[4] = widget.bdi_vanilla_texture_color[4]
+                widget.style.texture.size[1] = widget.bdi_vanilla_texture_size[1]
+                widget.style.texture.size[2] = widget.bdi_vanilla_texture_size[2]
+                widget.style.texture.default_size[1] = widget.bdi_vanilla_texture_default_size[1]
+                widget.style.texture.default_size[2] = widget.bdi_vanilla_texture_default_size[2]
+            end
+            if widget.style then
+                for pass_id, pass_style in pairs(widget.style) do
+                    if widget.bdi_vanilla_pass_alphas[pass_id] and pass_style.color then
+                        pass_style.color[1] = widget.bdi_vanilla_pass_alphas[pass_id]
+                    end
+                end
+            end
+            
+            if mod:get("enable_floating_markers") == false then
+                return result
+            end
+
             local unit = marker.unit
             if not unit then return result end
             
             local detected_status = Status.for_unit(unit)
             if not detected_status then return result end
             
-
-            local is_active_downed = detected_status == "pounced" or detected_status == "netted" or 
-                                     detected_status == "mutant_charged" or detected_status == "ledge_hanging" or 
-                                     detected_status == "knocked_down" or detected_status == "consumed" or 
-                                     detected_status == "grabbed" or detected_status == "warp_grabbed"
-                                     
-            if not is_active_downed then return result end
-            
             local icon_style = mod:get("floating_icon_style") or "glowing"
-            local use_glowing = icon_style == "glowing"
-            local customization_mode = mod:get("floating_plain_icon_customization_mode") or "off"
+            local floating_icon_size = mod:get("floating_icon_size") or 65
             
-            local icon_path = get_icon_path(detected_status, use_glowing, customization_mode)
+            local icon_path = get_icon_path(detected_status, icon_style)
             
             if icon_path then
                 local player = nil
@@ -840,9 +868,8 @@ mod:hook_require("scripts/ui/hud/elements/world_markers/templates/world_marker_t
                     player = player_manager:player_by_unit(unit)
                 end
                 
-                local color = get_status_color(detected_status, icon_style, customization_mode, use_glowing, player)
+                local color = get_status_color(detected_status, icon_style, player)
                 
-
                 if widget.content.icon then
                     widget.content.icon = icon_path
                     if widget.style.icon then
@@ -852,8 +879,8 @@ mod:hook_require("scripts/ui/hud/elements/world_markers/templates/world_marker_t
                             widget.style.icon.color[3] = color[3]
                             widget.style.icon.color[4] = color[4]
                         end
-                        widget.style.icon.size = { 65, 65 }
-                        widget.style.icon.default_size = { 65, 65 }
+                        widget.style.icon.size = { floating_icon_size, floating_icon_size }
+                        widget.style.icon.default_size = { floating_icon_size, floating_icon_size }
                     end
                 elseif widget.content.texture then
                     widget.content.texture = icon_path
@@ -864,8 +891,8 @@ mod:hook_require("scripts/ui/hud/elements/world_markers/templates/world_marker_t
                             widget.style.texture.color[3] = color[3]
                             widget.style.texture.color[4] = color[4]
                         end
-                        widget.style.texture.size = { 65, 65 }
-                        widget.style.texture.default_size = { 65, 65 }
+                        widget.style.texture.size = { floating_icon_size, floating_icon_size }
+                        widget.style.texture.default_size = { floating_icon_size, floating_icon_size }
                     end
                 end
                 
