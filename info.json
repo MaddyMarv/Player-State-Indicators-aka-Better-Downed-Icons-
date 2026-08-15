@@ -1,0 +1,14 @@
+{
+    "name": "Player State Indicators",
+    "author": "IndicaBunny",
+    "version": "2.14",
+    "source": "https://github.com/MaddyMarv/Player-State-Indicators-aka-Better-Downed-Icons-",
+    "kofi": "https://ko-fi.com/indicabunny",
+    "description": "Replaces the basic downed icon with specific icons that show exactly what grabbed or disabled your teammate.",
+    "order": {
+        "require": [],
+        "this_before": [],
+        "this_after": []
+    },
+    "localization": {}
+}
