@@ -68,16 +68,16 @@ local AGGRO_DEFAULT_COLORS = {
 }
 
 local function get_aggro_glow_color(aggro_type)
-    local r = mod:get("aggro_" .. aggro_type .. "_r")
-    local g = mod:get("aggro_" .. aggro_type .. "_g")
-    local b = mod:get("aggro_" .. aggro_type .. "_b")
+    local color = mod:get("aggro_" .. aggro_type .. "_color")
+    if color then return color end
+    
     local defaults = AGGRO_DEFAULT_COLORS[aggro_type]
     if not defaults then return nil end
     return {
         255,
-        r or defaults[1],
-        g or defaults[2],
-        b or defaults[3],
+        defaults[1],
+        defaults[2],
+        defaults[3],
     }
 end
 
@@ -190,7 +190,8 @@ local function get_status_color(detected_status, icon_style, player)
     local is_plain_only = (Status.icons_glowing[detected_status] == Status.icons[detected_status])
 
     if icon_style == "plain" or (icon_style == "glowing" and is_plain_only) then
-        return { 255, mod:get(detected_status .. "_r") or 255, mod:get(detected_status .. "_g") or 255, mod:get(detected_status .. "_b") or 255 }
+        local color = mod:get(detected_status .. "_color")
+        return color or { 255, 255, 255, 255 }
     elseif icon_style == "plain_slot_color" then
         local player_slot = player and player.slot and player:slot()
         local player_slot_colors = UISettings.player_slot_colors

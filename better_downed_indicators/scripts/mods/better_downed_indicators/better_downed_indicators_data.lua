@@ -85,28 +85,10 @@ local function build_status_widgets(status_list)
         local default_color = status_data[2]
 
         table.insert(w, {
-            setting_id = status_name .. "_header",
-            type = "group",
-            sub_widgets = {
-                {
-                    setting_id = status_name .. "_r",
-                    type = "numeric",
-                    range = { 0, 255 },
-                    default_value = default_color[2],
-                },
-                {
-                    setting_id = status_name .. "_g",
-                    type = "numeric",
-                    range = { 0, 255 },
-                    default_value = default_color[3],
-                },
-                {
-                    setting_id = status_name .. "_b",
-                    type = "numeric",
-                    range = { 0, 255 },
-                    default_value = default_color[4],
-                },
-            },
+            setting_id = status_name .. "_color",
+            type = "color",
+            default_value = default_color,
+            title = status_name .. "_header",
         })
     end
     return w
@@ -189,16 +171,16 @@ table.insert(widgets, {
 })
 
 local aggro_types = {
-    { "aggro_pox_burster", { 255, 255, 0 } },
-    { "aggro_disabler", { 77, 0, 255 } },
-    { "aggro_sniper", { 0, 255, 255 } },
-    { "aggro_captain", { 255, 96, 0 } },
-    { "aggro_monstrosity", { 255, 0, 0 } },
-    { "aggro_daemonhost", { 0, 255, 0 } },
-    { "aggro_grenadier", { 34, 100, 34 } },
-    { "aggro_crusher", { 0, 0, 255 } },
-    { "aggro_flamer", { 86, 10, 40 } },
-    { "aggro_rager", { 255, 43, 96 } },
+    { "aggro_pox_burster", { 255, 255, 255, 0 } },
+    { "aggro_disabler", { 255, 77, 0, 255 } },
+    { "aggro_sniper", { 255, 0, 255, 255 } },
+    { "aggro_captain", { 255, 255, 96, 0 } },
+    { "aggro_monstrosity", { 255, 255, 0, 0 } },
+    { "aggro_daemonhost", { 255, 0, 255, 0 } },
+    { "aggro_grenadier", { 255, 34, 100, 34 } },
+    { "aggro_crusher", { 255, 0, 0, 255 } },
+    { "aggro_flamer", { 255, 86, 10, 40 } },
+    { "aggro_rager", { 255, 255, 43, 96 } },
 }
 
 local aggro_color_widgets = {}
@@ -208,28 +190,10 @@ for _, aggro_data in ipairs(aggro_types) do
     local default_color = aggro_data[2]
 
     table.insert(aggro_color_widgets, {
-        setting_id = aggro_name .. "_header",
-        type = "group",
-        sub_widgets = {
-            {
-                setting_id = aggro_name .. "_r",
-                type = "numeric",
-                range = { 0, 255 },
-                default_value = default_color[1],
-            },
-            {
-                setting_id = aggro_name .. "_g",
-                type = "numeric",
-                range = { 0, 255 },
-                default_value = default_color[2],
-            },
-            {
-                setting_id = aggro_name .. "_b",
-                type = "numeric",
-                range = { 0, 255 },
-                default_value = default_color[3],
-            },
-        },
+        setting_id = aggro_name .. "_color",
+        type = "color",
+        default_value = default_color,
+        title = aggro_name .. "_header",
     })
 end
 
