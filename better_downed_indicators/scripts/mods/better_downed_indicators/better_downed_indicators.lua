@@ -2,8 +2,8 @@ local mod = get_mod("better_downed_indicators")
 
 local UISettings = require("scripts/settings/ui/ui_settings")
 local UIWidget = require("scripts/managers/ui/ui_widget")
-local Status = mod:io_dofile("better_downed_indicators/scripts/mods/better_downed_indicators/status_detection")
-local AggroDetection = mod:io_dofile("better_downed_indicators/scripts/mods/better_downed_indicators/aggro_detection")
+local Status = mod:io_dofile("better_downed_indicators/scripts/mods/better_downed_indicators/helpers/status_detection")
+local AggroDetection = mod:io_dofile("better_downed_indicators/scripts/mods/better_downed_indicators/helpers/aggro_detection")
 
 local packages_to_load = {
     "packages/ui/views/mission_board_view/mission_board_view",
