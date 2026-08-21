@@ -8,10 +8,11 @@
         "kofi": "https://ko-fi.com/indicabunny"
     },
     "description": "Replaces the basic downed icon with specific icons that show exactly what grabbed or disabled your teammate.",
-    "order": {
-        "require": [],
-        "this_before": [],
-        "this_after": []
+    "dependencies": {
+        "required": [],
+        "optional": [],
+        "self_before": [],
+        "self_after": []
     },
     "localization": {}
 }
