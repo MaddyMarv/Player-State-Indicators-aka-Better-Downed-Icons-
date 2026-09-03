@@ -130,14 +130,21 @@ end)
 
 local function is_personal_panel(panel, player)
     if panel then
-        if panel.class_name == "HudElementPersonalPlayerPanel" or panel.class_name == "HudElementPersonalPlayerPanelHub" then
+        local class_name = panel.__class_name or panel.class_name
+        if class_name == "HudElementPersonalPlayerPanel" or class_name == "HudElementPersonalPlayerPanelHub" then
             return true
         end
-        if panel.class_name == "HudElementTeamPlayerPanel" or panel.class_name == "HudElementTeamPlayerPanelHub" then
+        if class_name == "HudElementTeamPlayerPanel" or class_name == "HudElementTeamPlayerPanelHub" then
             return false
         end
-        if panel._data and panel._data.is_my_player ~= nil then
-            return panel._data.is_my_player == true
+        local data = panel._data
+        if data then
+            if data.scenegraph_id == "local_player" or data.using_fixed_scenegraph_id == true then
+                return true
+            end
+            if data.scenegraph_id and string.find(data.scenegraph_id, "player_") then
+                return false
+            end
         end
     end
     return false
@@ -739,12 +746,8 @@ mod:hook("HudElementPlayerPanelBase", "_set_shadowing_portrait", function(func, 
     func(self, should_shadow)
 end)
 
-local function refresh_all_panels()
-    local ui_manager = Managers.ui
-    if not ui_manager then return end
-    local hud = ui_manager._hud
+local function _refresh_panels_in_hud(hud)
     if not hud then return end
-
     local team_panel_handler = hud:element("HudElementTeamPanelHandler")
     if team_panel_handler and team_panel_handler._player_panels_array then
         for _, panel_data in ipairs(team_panel_handler._player_panels_array) do
@@ -755,13 +758,13 @@ local function refresh_all_panels()
             end
         end
     end
+end
 
-    local personal_panel = hud:element("HudElementPersonalPlayerPanel")
-    if personal_panel then
-        local player = personal_panel._player or (personal_panel._data and personal_panel._data.player)
-        update_status_icon_widget(personal_panel, player)
-        apply_aggro_glow(personal_panel, player)
-    end
+local function refresh_all_panels()
+    local ui_manager = Managers.ui
+    if not ui_manager then return end
+    _refresh_panels_in_hud(ui_manager._hud)
+    _refresh_panels_in_hud(ui_manager._spectator_hud)
 end
 
 mod.on_setting_changed = function(setting_id)

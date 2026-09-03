@@ -21,34 +21,34 @@ return {
         en = "Enable Background Tint",
     },
     group_personal_panel = {
-        en = "Personal Panel (Self)",
+        en = "Personal Panel",
     },
     enable_personal_panel_indicators = {
         en = "Enable Personal Panel Indicator",
     },
     enable_personal_panel_indicators_description = {
-        en = "Displays the status indicator on your personal HUD panel. When disabled, all status icons (including vanilla) are completely removed.",
+        en = "Displays status indicators on the personal player panel.",
     },
     personal_panel_offset_x = {
         en = "Offset X",
     },
     personal_panel_offset_x_description = {
-        en = "Horizontal offset for the status indicator on your personal panel.",
+        en = "Horizontal offset for the status indicator on the personal panel.",
     },
     personal_panel_offset_y = {
         en = "Offset Y",
     },
     personal_panel_offset_y_description = {
-        en = "Vertical offset for the status indicator on your personal panel.",
+        en = "Vertical offset for the status indicator on the personal panel.",
     },
     group_team_panels = {
-        en = "Team Panels (Teammates)",
+        en = "Team Panels",
     },
     enable_team_panel_indicators = {
         en = "Enable Team Panel Indicators",
     },
     enable_team_panel_indicators_description = {
-        en = "Displays status indicators on teammates' HUD panels. When disabled, all status icons (including vanilla) are completely removed.",
+        en = "Displays status indicators on team panels.",
     },
     team_panel_offset_x = {
         en = "Offset X",
@@ -169,13 +169,13 @@ return {
         en = "Enable Aggro Glow on Personal Panel",
     },
     aggro_enable_on_self_description = {
-        en = "Displays the threat border glow on the personal HUD panel (including while spectating).",
+        en = "Displays threat border glows on the personal player panel.",
     },
     aggro_enable_on_teammates = {
         en = "Enable Aggro Glow on Team Panels",
     },
     aggro_enable_on_teammates_description = {
-        en = "Displays the threat border glow on teammate HUD panels.",
+        en = "Displays threat border glows on team panels.",
     },
     aggro_header = {
         en = "Aggro Detection (Border Glow)",
