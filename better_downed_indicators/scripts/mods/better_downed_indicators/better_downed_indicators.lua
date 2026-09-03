@@ -212,6 +212,9 @@ local function apply_aggro_glow(self, player)
             glow1_style.color[1] = 0
             glow2_style.color[1] = 0
             glow_widget.dirty = true
+            if self.set_dirty then
+                self:set_dirty()
+            end
         end
         return
     end
@@ -242,6 +245,9 @@ local function apply_aggro_glow(self, player)
     glow2_style.color[4] = color[4]
 
     glow_widget.dirty = true
+    if self.set_dirty then
+        self:set_dirty()
+    end
 end
 
 local ICONS_WITH_DISTINCT_PLAIN = {
@@ -588,6 +594,9 @@ local function update_status_icon_widget(self, player)
         if player_icon_widget then
             apply_widget_shadow(player_icon_widget, false)
         end
+        if self.set_dirty then
+            self:set_dirty()
+        end
         return
     end
 
@@ -667,10 +676,16 @@ local function update_status_icon_widget(self, player)
 
     widget.visible = true
     widget.dirty = true
+    if self._set_widget_visible then
+        self:_set_widget_visible(widget, true)
+    end
 
     local player_icon_widget = widgets_by_name and widgets_by_name.player_icon
     if player_icon_widget then
         apply_widget_shadow(player_icon_widget, true)
+    end
+    if self.set_dirty then
+        self:set_dirty()
     end
 
     if detected_status == "auspex" or detected_status == "luggable" or
@@ -751,11 +766,18 @@ local function _refresh_panels_in_hud(hud)
     local team_panel_handler = hud:element("HudElementTeamPanelHandler")
     if team_panel_handler and team_panel_handler._player_panels_array then
         for _, panel_data in ipairs(team_panel_handler._player_panels_array) do
-            if panel_data and panel_data.panel then
-                local player = panel_data.player or panel_data.panel._player
-                update_status_icon_widget(panel_data.panel, player)
-                apply_aggro_glow(panel_data.panel, player)
+            local panel = panel_data.panel
+            if panel then
+                local player = panel_data.player or panel._player
+                update_status_icon_widget(panel, player)
+                apply_aggro_glow(panel, player)
+                if panel.set_dirty then
+                    panel:set_dirty()
+                end
             end
+        end
+        if team_panel_handler.set_dirty then
+            team_panel_handler:set_dirty()
         end
     end
 end
@@ -768,6 +790,12 @@ local function refresh_all_panels()
 end
 
 mod.on_setting_changed = function(setting_id)
+    refresh_all_panels()
+end
+
+mod.on_settings_changed = mod.on_setting_changed
+
+mod.on_settings_reset = function()
     refresh_all_panels()
 end
 
