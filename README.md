@@ -7,8 +7,11 @@ Standalone mod that replaces the generic exclamation point when a teammate goes 
 **Options:**
 - Icon Style [Glowing, Plain (Uses Status Colors), Plain (Teammate Color)]
 - Enable Background Tint
-- Enable Floating Markers
-- Icon Size
+- Enable Personal Panel Indicator (Offset X, Offset Y)
+- Enable Team Panel Indicators (Offset X, Offset Y)
+- Enable Floating Markers (Icon Style, Icon Size)
+- Status Colors
+- Aggro Detection Panel Display (Enable on Personal Panel, Enable on Team Panels)
 - Aggro Glow Options (Enable Pox Burster, Enable Disabler, Enable Sniper, Enable Captain/Twins, Enable Monstrosity, Enable Daemonhost, Enable Grenadier/Tox Bomber, Enable Crusher/Mauler, Enable Flamer, Enable Rager)
 
 🔗 **Links:** [Source Code](https://github.com/MaddyMarv/Player-State-Indicators-aka-Better-Downed-Icons-) | [Nexus Mods Profile](https://www.nexusmods.com/profile/indicabunny) | [Support Me on Ko-fi](https://ko-fi.com/indicabunny)
