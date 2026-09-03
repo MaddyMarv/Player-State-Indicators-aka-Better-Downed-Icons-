@@ -20,23 +20,77 @@ return {
     enable_background_tint = {
         en = "Enable Background Tint",
     },
+    group_personal_panel = {
+        en = "Personal Panel (Self)",
+    },
+    enable_personal_panel_indicators = {
+        en = "Enable Personal Panel Indicator",
+    },
+    enable_personal_panel_indicators_description = {
+        en = "Displays the status indicator on your personal HUD panel. When disabled, all status icons (including vanilla) are completely removed.",
+    },
+    personal_panel_offset_x = {
+        en = "Offset X",
+    },
+    personal_panel_offset_x_description = {
+        en = "Horizontal offset for the status indicator on your personal panel.",
+    },
+    personal_panel_offset_y = {
+        en = "Offset Y",
+    },
+    personal_panel_offset_y_description = {
+        en = "Vertical offset for the status indicator on your personal panel.",
+    },
     group_team_panels = {
-        en = "Team Panels (Bottom Left)",
+        en = "Team Panels (Teammates)",
+    },
+    enable_team_panel_indicators = {
+        en = "Enable Team Panel Indicators",
+    },
+    enable_team_panel_indicators_description = {
+        en = "Displays status indicators on teammates' HUD panels. When disabled, all status icons (including vanilla) are completely removed.",
+    },
+    team_panel_offset_x = {
+        en = "Offset X",
+    },
+    team_panel_offset_x_description = {
+        en = "Horizontal offset for status indicators on teammates' panels.",
+    },
+    team_panel_offset_y = {
+        en = "Offset Y",
+    },
+    team_panel_offset_y_description = {
+        en = "Vertical offset for status indicators on teammates' panels.",
+    },
+    group_panel_styling = {
+        en = "Panel Styling",
     },
     group_floating_markers = {
         en = "Floating Markers (In-World)",
     },
     tab_general = {
-        en = "General",
+        en = "Panel Indicators",
+    },
+    tab_world_markers = {
+        en = "World Markers",
     },
     floating_icon_style = {
         en = "Icon Style",
     },
+    floating_icon_style_description = {
+        en = "Visual style of the floating in-world status icon marker.",
+    },
     floating_icon_size = {
         en = "Icon Size",
     },
+    floating_icon_size_description = {
+        en = "Size of the floating in-world status icon marker.",
+    },
     enable_floating_markers = {
         en = "Enable Floating Markers",
+    },
+    enable_floating_markers_description = {
+        en = "Replaces the generic in-world downed/trapped exclamation icon floating over player characters with specific status icons.",
     },
     group_status_colors = {
         en = "Status Colors",
@@ -107,6 +161,21 @@ return {
 
     title_color = {
         en = "Color",
+    },
+    aggro_panel_display_group = {
+        en = "Aggro Detection Panel Display",
+    },
+    aggro_enable_on_self = {
+        en = "Enable Aggro Glow on Self",
+    },
+    aggro_enable_on_self_description = {
+        en = "Displays the threat border glow on your own personal HUD panel when enemies target you.",
+    },
+    aggro_enable_on_teammates = {
+        en = "Enable Aggro Glow on Teammates",
+    },
+    aggro_enable_on_teammates_description = {
+        en = "Displays the threat border glow on teammates' HUD panels when enemies target them.",
     },
     aggro_header = {
         en = "Aggro Detection (Border Glow)",

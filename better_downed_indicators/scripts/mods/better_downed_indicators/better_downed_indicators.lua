@@ -128,6 +128,72 @@ mod:hook("HudElementTeamPlayerPanel", "init", function(func, self, parent, draw_
     init_aggro_glow_widget(self, 80)
 end)
 
+local function is_personal_panel(panel, player)
+    if panel then
+        if panel._data and panel._data.is_my_player ~= nil then
+            return panel._data.is_my_player == true
+        end
+        if panel.class_name == "HudElementPersonalPlayerPanel" or panel.class_name == "HudElementPersonalPlayerPanelHub" then
+            return true
+        end
+    end
+    local target_player = player or (panel and (panel._player or (panel._data and panel._data.player)))
+    if target_player and Managers.player then
+        local local_player = Managers.player:local_player(1)
+        if local_player and target_player == local_player then
+            return true
+        end
+    end
+    return false
+end
+
+local function is_panel_indicators_enabled(panel, player)
+    local is_personal = is_personal_panel(panel, player)
+    if is_personal then
+        local enabled = mod:get("enable_personal_panel_indicators")
+        if enabled ~= nil then
+            return enabled
+        end
+        return true
+    else
+        local enabled = mod:get("enable_team_panel_indicators")
+        if enabled ~= nil then
+            return enabled
+        end
+        return true
+    end
+end
+
+local function get_panel_offsets(panel, player)
+    local is_personal = is_personal_panel(panel, player)
+    if is_personal then
+        local offset_x = mod:get("personal_panel_offset_x") or 0
+        local offset_y = mod:get("personal_panel_offset_y") or 0
+        return offset_x, offset_y
+    else
+        local offset_x = mod:get("team_panel_offset_x") or 0
+        local offset_y = mod:get("team_panel_offset_y") or 0
+        return offset_x, offset_y
+    end
+end
+
+local function is_aggro_glow_enabled(panel, player)
+    local is_personal = is_personal_panel(panel, player)
+    if is_personal then
+        local enabled = mod:get("aggro_enable_on_self")
+        if enabled ~= nil then
+            return enabled
+        end
+        return true
+    else
+        local enabled = mod:get("aggro_enable_on_teammates")
+        if enabled ~= nil then
+            return enabled
+        end
+        return true
+    end
+end
+
 local function apply_aggro_glow(self, player)
     local widgets_by_name = self._widgets_by_name
     if not widgets_by_name then return end
@@ -135,11 +201,20 @@ local function apply_aggro_glow(self, player)
     local glow_widget = widgets_by_name.bdi_aggro_glow
     if not glow_widget or not glow_widget.style then return end
 
-    local unit = player and player.player_unit
-    local aggro_type = unit and AggroDetection.get_aggro_for_unit(unit)
-
     local glow1_style = glow_widget.style.glow1
     local glow2_style = glow_widget.style.glow2
+
+    if not is_aggro_glow_enabled(self, player) then
+        if glow1_style.color[1] ~= 0 then
+            glow1_style.color[1] = 0
+            glow2_style.color[1] = 0
+            glow_widget.dirty = true
+        end
+        return
+    end
+
+    local unit = player and player.player_unit
+    local aggro_type = unit and AggroDetection.get_aggro_for_unit(unit)
 
     if not aggro_type then
         if glow1_style.color[1] ~= 0 then
@@ -214,7 +289,7 @@ local function apply_color_to_texture(texture_style, color)
     end
 end
 
-local function setup_texture_style(texture_style, icon_size)
+local function setup_texture_style(texture_style, icon_size, offset_x, offset_y)
     if not texture_style then
         return
     end
@@ -227,8 +302,8 @@ local function setup_texture_style(texture_style, icon_size)
     end
     texture_style.horizontal_alignment = "center"
     texture_style.vertical_alignment = "center"
-    texture_style.offset[1] = 0
-    texture_style.offset[2] = 0
+    texture_style.offset[1] = offset_x or 0
+    texture_style.offset[2] = offset_y or 0
 
     local profile_pictures_mod = get_mod("ProfilePictures")
     local has_profile_pictures = profile_pictures_mod ~= nil
@@ -398,6 +473,25 @@ end
 
 mod:hook("HudElementPlayerPanelBase", "_set_status_icon", function(func, self, status_icon, status_color, ui_renderer)
     local player = self._player or (self._data and self._data.player)
+
+    if not is_panel_indicators_enabled(self, player) then
+        local widgets_by_name = self._widgets_by_name
+        local widget = widgets_by_name and widgets_by_name.status_icon
+        if widget then
+            widget.content.texture = nil
+            widget.visible = false
+            widget.dirty = true
+            if self._set_widget_visible then
+                self:_set_widget_visible(widget, false, ui_renderer)
+            end
+        end
+        local player_icon_widget = widgets_by_name and widgets_by_name.player_icon
+        if player_icon_widget then
+            apply_widget_shadow(player_icon_widget, false)
+        end
+        return
+    end
+
     status_icon, status_color = replace_status_icon(self, status_icon, status_color, ui_renderer, player)
     func(self, status_icon, status_color, ui_renderer)
     local unit = player and player.player_unit
@@ -442,8 +536,8 @@ mod:hook("HudElementPlayerPanelBase", "_set_status_icon", function(func, self, s
 
     local texture_style = widget.style.texture
     if texture_style then
-        local is_personal_panel = self.class_name == "HudElementPersonalPlayerPanel" or (self._data and self._data.is_my_player == true)
-        local base_size = is_personal_panel and ICON_SIZE_PERSONAL or ICON_SIZE_TEAM
+        local is_personal = is_personal_panel(self, player)
+        local base_size = is_personal and ICON_SIZE_PERSONAL or ICON_SIZE_TEAM
         local needs_size_boost = detected_status == "luggable" or detected_status == "healing" or detected_status == "helping" or detected_status == "interacting"
         if (detected_status == "dead" or detected_status == "respawning" or detected_status == "hogtied") and (icon_style == "plain" or icon_style == "plain_slot_color") then
             needs_size_boost = true
@@ -452,7 +546,8 @@ mod:hook("HudElementPlayerPanelBase", "_set_status_icon", function(func, self, s
         if detected_status == "interacting" then
             icon_size = icon_size + 10
         end
-        setup_texture_style(texture_style, icon_size)
+        local offset_x, offset_y = get_panel_offsets(self, player)
+        setup_texture_style(texture_style, icon_size, offset_x, offset_y)
 
         local color = get_status_color(detected_status, icon_style, player)
         apply_color_to_texture(texture_style, color)
@@ -473,19 +568,33 @@ local function update_status_icon_widget(self, player)
         return
     end
 
-    local unit = player and player.player_unit
     local widgets_by_name = self._widgets_by_name
+    local widget = widgets_by_name and widgets_by_name.status_icon
+    if not widget then
+        return
+    end
+
+    if not is_panel_indicators_enabled(self, player) then
+        widget.content.texture = nil
+        widget.visible = false
+        widget.dirty = true
+        if self._set_widget_visible then
+            self:_set_widget_visible(widget, false)
+        end
+        local player_icon_widget = widgets_by_name and widgets_by_name.player_icon
+        if player_icon_widget then
+            apply_widget_shadow(player_icon_widget, false)
+        end
+        return
+    end
+
+    local unit = player and player.player_unit
 
     local detected_status = nil
     if unit then
         detected_status = Status.for_unit(unit)
     elseif self._dead or self._show_as_dead then
         detected_status = detect_death_or_respawn_status(player, self._dead, self._show_as_dead)
-    end
-
-    local widget = widgets_by_name and widgets_by_name.status_icon
-    if not widget then
-        return
     end
 
     if not detected_status then
@@ -536,8 +645,8 @@ local function update_status_icon_widget(self, player)
 
     local texture_style = widget.style.texture
     if texture_style then
-        local is_personal_panel = self.class_name == "HudElementPersonalPlayerPanel" or (self._data and self._data.is_my_player == true)
-        local base_size = is_personal_panel and ICON_SIZE_PERSONAL or ICON_SIZE_TEAM
+        local is_personal = is_personal_panel(self, player)
+        local base_size = is_personal and ICON_SIZE_PERSONAL or ICON_SIZE_TEAM
         local needs_size_boost = detected_status == "luggable" or detected_status == "healing" or detected_status == "helping" or detected_status == "interacting"
         if (detected_status == "dead" or detected_status == "respawning" or detected_status == "hogtied") and (icon_style == "plain" or icon_style == "plain_slot_color") then
             needs_size_boost = true
@@ -546,7 +655,8 @@ local function update_status_icon_widget(self, player)
         if detected_status == "interacting" then
             icon_size = icon_size + 10
         end
-        setup_texture_style(texture_style, icon_size)
+        local offset_x, offset_y = get_panel_offsets(self, player)
+        setup_texture_style(texture_style, icon_size, offset_x, offset_y)
 
         local color = get_status_color(detected_status, icon_style, player)
         apply_color_to_texture(texture_style, color)
@@ -619,26 +729,55 @@ mod:hook("HudElementTeamPlayerPanel", "_update_player_features", function(func, 
     apply_aggro_glow(self, player)
 end)
 
+mod:hook("HudElementPlayerPanelBase", "_set_shadowing_portrait", function(func, self, should_shadow)
+    local player = self._player or (self._data and self._data.player)
+    if not is_panel_indicators_enabled(self, player) then
+        func(self, false)
+        local widgets_by_name = self._widgets_by_name
+        local player_icon_widget = widgets_by_name and widgets_by_name.player_icon
+        if player_icon_widget then
+            apply_widget_shadow(player_icon_widget, false)
+        end
+        return
+    end
+    func(self, should_shadow)
+end)
+
+local function refresh_all_panels()
+    local ui_manager = Managers.ui
+    if not ui_manager then return end
+    local hud = ui_manager._hud
+    if not hud then return end
+
+    local team_panel_handler = hud:element("HudElementTeamPanelHandler")
+    if team_panel_handler and team_panel_handler._player_panels_array then
+        for _, panel_data in ipairs(team_panel_handler._player_panels_array) do
+            if panel_data and panel_data.panel then
+                local player = panel_data.player or panel_data.panel._player
+                update_status_icon_widget(panel_data.panel, player)
+                apply_aggro_glow(panel_data.panel, player)
+            end
+        end
+    end
+
+    local personal_panel = hud:element("HudElementPersonalPlayerPanel")
+    if personal_panel then
+        local player = personal_panel._player or (personal_panel._data and personal_panel._data.player)
+        update_status_icon_widget(personal_panel, player)
+        apply_aggro_glow(personal_panel, player)
+    end
+end
+
+mod.on_setting_changed = function(setting_id)
+    refresh_all_panels()
+end
+
 mod.update = function(dt)
     if mod._game_state_init_timer then
         mod._game_state_init_timer = mod._game_state_init_timer - dt
         if mod._game_state_init_timer <= 0 then
             mod._game_state_init_timer = nil
-
-            local ui_manager = Managers.ui
-            if ui_manager then
-                local hud = ui_manager._hud
-                if hud then
-                    local team_panel_handler = hud:element("HudElementTeamPanelHandler")
-                    if team_panel_handler and team_panel_handler._player_panels_array then
-                        for _, panel_data in ipairs(team_panel_handler._player_panels_array) do
-                            if panel_data and panel_data.panel and panel_data.player then
-                                update_status_icon_widget(panel_data.panel, panel_data.player)
-                            end
-                        end
-                    end
-                end
-            end
+            refresh_all_panels()
         end
     end
 
