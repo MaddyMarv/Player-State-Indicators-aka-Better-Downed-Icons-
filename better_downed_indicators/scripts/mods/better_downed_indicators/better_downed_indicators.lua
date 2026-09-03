@@ -130,18 +130,14 @@ end)
 
 local function is_personal_panel(panel, player)
     if panel then
-        if panel._data and panel._data.is_my_player ~= nil then
-            return panel._data.is_my_player == true
-        end
         if panel.class_name == "HudElementPersonalPlayerPanel" or panel.class_name == "HudElementPersonalPlayerPanelHub" then
             return true
         end
-    end
-    local target_player = player or (panel and (panel._player or (panel._data and panel._data.player)))
-    if target_player and Managers.player then
-        local local_player = Managers.player:local_player(1)
-        if local_player and target_player == local_player then
-            return true
+        if panel.class_name == "HudElementTeamPlayerPanel" or panel.class_name == "HudElementTeamPlayerPanelHub" then
+            return false
+        end
+        if panel._data and panel._data.is_my_player ~= nil then
+            return panel._data.is_my_player == true
         end
     end
     return false

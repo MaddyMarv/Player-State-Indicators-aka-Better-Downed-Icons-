@@ -166,16 +166,16 @@ return {
         en = "Aggro Detection Panel Display",
     },
     aggro_enable_on_self = {
-        en = "Enable Aggro Glow on Self",
+        en = "Enable Aggro Glow on Personal Panel",
     },
     aggro_enable_on_self_description = {
-        en = "Displays the threat border glow on your own personal HUD panel when enemies target you.",
+        en = "Displays the threat border glow on the personal HUD panel (including while spectating).",
     },
     aggro_enable_on_teammates = {
-        en = "Enable Aggro Glow on Teammates",
+        en = "Enable Aggro Glow on Team Panels",
     },
     aggro_enable_on_teammates_description = {
-        en = "Displays the threat border glow on teammates' HUD panels when enemies target them.",
+        en = "Displays the threat border glow on teammate HUD panels.",
     },
     aggro_header = {
         en = "Aggro Detection (Border Glow)",
