@@ -1,6 +1,6 @@
-Standalone mod that replaces the generic exclamation point when a teammate goes down with a specific icon showing if they got pounced by a hound, netted by a trapper, or grabbed by a mutant. You can customize the icon colors. You can also add a glowing border around teammate icons when they have aggro from bosses or specials so you know who the boss is targeting.
+Replaces generic downed icons with specific status icons (pounced by hound, netted by trapper, grabbed by mutant) and adds aggro borders.
 
-Thanks to [url=https://www.nexusmods.com/warhammer40kdarktide/users/1992757]GideonAriphael[/url] for his mod [url=https://www.nexusmods.com/warhammer40kdarktide/mods/520]Ring HUD[/url] for the ideas and hooks! :)
+Thanks to [url=https://www.nexusmods.com/warhammer40kdarktide/users/1992757]GideonAriphael[/url] for his mod [url=https://www.nexusmods.com/warhammer40kdarktide/mods/520]Ring HUD[/url] for the ideas and hooks! :)
 
 [b]Options:[/b]
 
