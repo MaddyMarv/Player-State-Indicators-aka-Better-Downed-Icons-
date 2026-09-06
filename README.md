@@ -13,9 +13,8 @@ Standalone mod that replaces the generic exclamation point when a teammate goes 
 
 **World Markers**
 - Enable Floating World Markers
-- Floating Marker Icon Style
+- Floating Marker Icon Style [Glowing, Plain (Uses Status Colors), Plain (Teammate Color)]
 - Floating Marker Icon Size
-- Floating Marker Clamp to Screen
 
 **Status Colors**
 - Custom Status Colors (Pounced / Dogged, Netted / Trapped, Grabbed / Mutant, Consumed / Beast of Nurgle, Knocked Down, Hogtied / Awaiting Rescue)
