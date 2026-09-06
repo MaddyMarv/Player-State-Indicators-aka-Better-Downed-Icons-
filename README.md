@@ -3,7 +3,7 @@
 
 Standalone mod that replaces the generic exclamation point when a teammate goes down with a specific icon showing if they got pounced by a hound, netted by a trapper, or grabbed by a mutant. You can customize the icon colors. You can also add a glowing border around teammate icons when they have aggro from bosses or specials so you know who the boss is targeting.
 
-Thanks to GideonAriphael for his mod Ring HUD for the ideas and hooks! :)
+Thanks to [GideonAriphael](https://www.nexusmods.com/warhammer40kdarktide/users/1992757) for his mod [Ring HUD](https://www.nexusmods.com/warhammer40kdarktide/mods/520) for the ideas and hooks! :)
 
 **Options:**
 
