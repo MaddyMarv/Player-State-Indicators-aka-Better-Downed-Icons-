@@ -3,7 +3,7 @@ return {
         en = "Better Downed Indicators",
     },
     mod_description = {
-        en = "Replaces the generic exclamation point icon on teammate and personal HUD panels with specific icons that show what took them down (pounced by dog, netted by trapper, etc.), making it clearer how to respond.",
+        en = "Replaces generic downed icons with specific status icons (pounced by hound, netted by trapper, grabbed by mutant) and adds aggro borders.",
     },
     icon_style = {
         en = "Icon Style",

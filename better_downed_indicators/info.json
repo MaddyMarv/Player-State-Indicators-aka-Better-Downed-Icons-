@@ -7,7 +7,7 @@
     "funding": {
         "kofi": "https://ko-fi.com/indicabunny"
     },
-    "description": "Replaces the basic downed icon with specific icons that show exactly what grabbed or disabled your teammate.",
+    "description": "Replaces generic downed icons with specific status icons (pounced by hound, netted by trapper, grabbed by mutant) and adds aggro borders.",
     "dependencies": {
         "required": [],
         "self_after": [],
