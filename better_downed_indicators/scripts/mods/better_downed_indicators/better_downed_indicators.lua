@@ -11,11 +11,13 @@ local packages_to_load = {
     "packages/ui/hud/interaction/interaction",
     "packages/ui/hud/wield_info/wield_info",
     "packages/ui/views/inventory_background_view/inventory_background_view",
+    "packages/ui/views/scanner_display_view/scanner_display_view",
+    "packages/ui/views/talent_builder_view/zealot",
+    "packages/ui/views/talent_builder_view/talent_builder_view",
 }
 
 mod._auspex_active_units = {}
 mod._interaction_active_units = {}
-mod._game_state_init_timer = nil
 
 mod:hook_safe(CLASS.AuspexScanningEffects, "_run_searching_sfx_loop", function(self)
     if self and self._owner_unit then
@@ -404,6 +406,13 @@ local function detect_death_or_respawn_status(player, is_dead, show_as_dead)
         return nil
     end
 
+    local game_mode_manager = Managers.state and Managers.state.game_mode
+    local game_mode = game_mode_manager and game_mode_manager:game_mode_name()
+    local is_hub_or_range = (game_mode == "shooting_range" or game_mode == "hub" or game_mode == "prologue")
+    if is_hub_or_range then
+        return nil
+    end
+
     local player_manager = Managers.player
     if player_manager then
         local unique_id = player:unique_id()
@@ -463,21 +472,8 @@ local function replace_status_icon(self, status_icon, status_color, ui_renderer,
     end
 
     local icon_style = mod:get("icon_style") or "glowing"
-    
-    local icon_path = get_icon_path(detected_status, icon_style)
-    
-    local status_color = nil
-    if icon_path then
-        status_color = get_status_color(detected_status, icon_style, player)
-    end
-    
-    if not icon_path then
-        icon_style = "plain"
-        icon_path = get_icon_path(detected_status, icon_style)
-        status_color = get_status_color(detected_status, icon_style, player)
-    end
-
-    return status_icon, status_color
+    local new_color = get_status_color(detected_status, icon_style, player)
+    return status_icon, new_color
 end
 
 mod:hook("HudElementPlayerPanelBase", "_set_status_icon", function(func, self, status_icon, status_color, ui_renderer)
@@ -688,13 +684,6 @@ local function update_status_icon_widget(self, player)
         self:set_dirty()
     end
 
-    if detected_status == "auspex" or detected_status == "luggable" or
-       detected_status == "healing" or detected_status == "helping" or detected_status == "interacting" then
-        if icon_path then
-            local status_color = get_status_color(detected_status, icon_style, player)
-            self:_set_status_icon(icon_path, status_color, nil)
-        end
-    end
 end
 
 local function _sync_panel_player(self, player)
@@ -726,6 +715,7 @@ end)
 
 mod:hook("HudElementPlayerPanelBase", "_update_player_features", function(func, self, dt, t, player, ui_renderer)
     _sync_panel_player(self, player)
+
     func(self, dt, t, player, ui_renderer)
 
     if self._dead or self._show_as_dead then
@@ -749,7 +739,12 @@ end)
 
 mod:hook("HudElementPlayerPanelBase", "_set_shadowing_portrait", function(func, self, should_shadow)
     local player = self._player or (self._data and self._data.player)
-    if not is_panel_indicators_enabled(self, player) then
+    local enable_background_tint = mod:get("enable_background_tint")
+    if enable_background_tint == nil then
+        enable_background_tint = true
+    end
+
+    if not is_panel_indicators_enabled(self, player) or not enable_background_tint then
         func(self, false)
         local widgets_by_name = self._widgets_by_name
         local player_icon_widget = widgets_by_name and widgets_by_name.player_icon
@@ -758,11 +753,34 @@ mod:hook("HudElementPlayerPanelBase", "_set_shadowing_portrait", function(func, 
         end
         return
     end
+
+    local game_mode_manager = Managers.state and Managers.state.game_mode
+    local game_mode = game_mode_manager and game_mode_manager:game_mode_name()
+    local is_hub_or_range = (game_mode == "shooting_range" or game_mode == "hub" or game_mode == "prologue")
+    local unit = player and player.player_unit
+    if is_hub_or_range and not unit then
+        should_shadow = false
+    end
+
     func(self, should_shadow)
+    local widgets_by_name = self._widgets_by_name
+    local player_icon_widget = widgets_by_name and widgets_by_name.player_icon
+    if player_icon_widget then
+        apply_widget_shadow(player_icon_widget, should_shadow)
+    end
 end)
 
 local function _refresh_panels_in_hud(hud)
     if not hud then return end
+    local personal_panel = hud:element("HudElementPersonalPlayerPanel")
+    if personal_panel then
+        local player = personal_panel._player
+        update_status_icon_widget(personal_panel, player)
+        apply_aggro_glow(personal_panel, player)
+        if personal_panel.set_dirty then
+            personal_panel:set_dirty()
+        end
+    end
     local team_panel_handler = hud:element("HudElementTeamPanelHandler")
     if team_panel_handler and team_panel_handler._player_panels_array then
         for _, panel_data in ipairs(team_panel_handler._player_panels_array) do
@@ -800,14 +818,6 @@ mod.on_settings_reset = function()
 end
 
 mod.update = function(dt)
-    if mod._game_state_init_timer then
-        mod._game_state_init_timer = mod._game_state_init_timer - dt
-        if mod._game_state_init_timer <= 0 then
-            mod._game_state_init_timer = nil
-            refresh_all_panels()
-        end
-    end
-
     AggroDetection.scan(dt)
 end
 
@@ -1079,8 +1089,244 @@ mod:hook_require("scripts/ui/hud/elements/world_markers/templates/world_marker_t
     end
 end)
 
+local _packages_loaded = false
+
 mod.on_enabled = function()
-    for _, package_path in ipairs(packages_to_load) do
-        Managers.package:load(package_path, mod:get_name(), nil, true)
+    if not _packages_loaded then
+        for _, package_path in ipairs(packages_to_load) do
+            Managers.package:load(package_path, mod:get_name(), nil, true)
+        end
+        _packages_loaded = true
     end
+end
+
+local function _release_packages()
+    if _packages_loaded then
+        for _, package_path in ipairs(packages_to_load) do
+            Managers.package:release(package_path, mod:get_name())
+        end
+        _packages_loaded = false
+    end
+end
+
+mod.on_disabled = _release_packages
+mod.on_unload = _release_packages
+
+-- HUD Studio integration
+local function _resolve_status_and_player(status)
+    if not mod:is_enabled() then return nil, nil end
+    if not status then return nil, nil end
+
+    local game_mode_manager = Managers.state and Managers.state.game_mode
+    local game_mode = game_mode_manager and game_mode_manager:game_mode_name()
+    local is_hub_or_range = (game_mode == "shooting_range" or game_mode == "hub" or game_mode == "prologue")
+    if is_hub_or_range then return nil, nil end
+
+    local detected_status = nil
+    local player = nil
+    local unit = nil
+    local is_personal = false
+
+    if type(status) == "number" then
+        local player_manager = Managers.player
+        if player_manager then
+            if status == 1 then
+                player = player_manager:local_player(1)
+                is_personal = true
+            else
+                local local_player = player_manager:local_player(1)
+                local others = {}
+                for _, p in pairs(player_manager:players()) do
+                    if p ~= local_player then
+                        local ok, s = pcall(p.slot, p)
+                        others[#others + 1] = { p = p, s = ok and s or 9999 }
+                    end
+                end
+                table.sort(others, function(a, b) return a.s < b.s end)
+                local entry = others[status - 1]
+                player = entry and entry.p
+            end
+            unit = player and player.player_unit
+        end
+
+        if is_personal then
+            local enabled = mod:get("enable_personal_panel_indicators")
+            if enabled == false then return nil, nil end
+        else
+            local enabled = mod:get("enable_team_panel_indicators")
+            if enabled == false then return nil, nil end
+        end
+
+        if unit and Unit.alive(unit) then
+            detected_status = Status.for_unit(unit)
+        elseif player then
+            local game_mode_manager = Managers.state and Managers.state.game_mode
+            local game_mode = game_mode_manager and game_mode_manager:game_mode_name()
+            local is_hub_or_range = (game_mode == "shooting_range" or game_mode == "hub" or game_mode == "prologue")
+            if not is_hub_or_range then
+                detected_status = detect_death_or_respawn_status(player, true, true)
+            end
+        end
+
+        return detected_status, player
+    end
+
+    if type(status) == "userdata" then
+        unit = status
+        detected_status = Status.for_unit(unit)
+        return detected_status, nil
+    end
+
+    if type(status) == "table" then
+        player = status.player or status._player
+        unit = status.player_unit or (player and player.player_unit) or status.unit
+
+        if not player and not unit then
+            local player_manager = Managers.player
+            if player_manager then
+                if status.state and status.state.local_player then
+                    player = player_manager:local_player(1)
+                elseif status.profile and status.profile.name then
+                    local name = status.profile.name
+                    for _, p in pairs(player_manager:players()) do
+                        if p:name() == name then
+                            player = p
+                            break
+                        end
+                    end
+                end
+                unit = player and player.player_unit
+            end
+        end
+
+        if player then
+            local player_manager = Managers.player
+            local local_player = player_manager and player_manager:local_player(1)
+            is_personal = (player == local_player)
+        elseif status.state and status.state.local_player then
+            is_personal = true
+        end
+
+        if is_personal then
+            local enabled = mod:get("enable_personal_panel_indicators")
+            if enabled == false then return nil, nil end
+        else
+            local enabled = mod:get("enable_team_panel_indicators")
+            if enabled == false then return nil, nil end
+        end
+
+        if unit and Unit.alive(unit) then
+            detected_status = Status.for_unit(unit)
+        elseif player then
+            local game_mode_manager = Managers.state and Managers.state.game_mode
+            local game_mode = game_mode_manager and game_mode_manager:game_mode_name()
+            local is_hub_or_range = (game_mode == "shooting_range" or game_mode == "hub" or game_mode == "prologue")
+            if not is_hub_or_range then
+                detected_status = detect_death_or_respawn_status(player, true, true)
+            end
+        end
+
+        if not detected_status then
+            local s = (type(status) == "table" and status.state) or status
+            if type(s) == "table" then
+                if s.hogtied then
+                    detected_status = "hogtied"
+                elseif s.pounced then
+                    detected_status = "pounced"
+                elseif s.netted then
+                    detected_status = "netted"
+                elseif s.warp_grabbed then
+                    detected_status = "warp_grabbed"
+                elseif s.mutant_charged then
+                    detected_status = "mutant_charged"
+                elseif s.consumed or s.vortex_grabbed then
+                    detected_status = "consumed"
+                elseif s.grabbed then
+                    detected_status = "grabbed"
+                elseif s.downed then
+                    detected_status = "knocked_down"
+                elseif s.ledge_hanging then
+                    detected_status = "ledge_hanging"
+                elseif s.reviving then
+                    detected_status = "helping"
+                elseif s.carrying_luggable then
+                    detected_status = "luggable"
+                elseif (status.device and (status.device.held or status.device.is_equipped)) or s.auspex then
+                    detected_status = "auspex"
+                elseif s.dead then
+                    if s.seconds_until_rescuable and s.seconds_until_rescuable > 0 then
+                        detected_status = "respawning"
+                    else
+                        detected_status = "dead"
+                    end
+                end
+            end
+        end
+
+        return detected_status, player
+    end
+
+    return nil, nil
+end
+
+mod.hud_studio_status_icon = function(status)
+    local detected_status, player = _resolve_status_and_player(status)
+    if not detected_status then return nil end
+
+    local icon_style = mod:get("icon_style") or "glowing"
+    return get_icon_path(detected_status, icon_style)
+end
+
+mod.hud_studio_status_color = function(status)
+    local detected_status, player = _resolve_status_and_player(status)
+    if not detected_status then return nil end
+
+    local icon_style = mod:get("icon_style") or "glowing"
+    return get_status_color(detected_status, icon_style, player)
+end
+
+mod.hud_studio_status_icon_for_slot = function(hud_slot)
+    return mod.hud_studio_status_icon(hud_slot)
+end
+
+mod.hud_studio_aggro_color = function(status)
+    if not mod:is_enabled() then return nil end
+    local _, player = _resolve_status_and_player(status)
+    local unit = player and player.player_unit
+    if not unit then return nil end
+
+    local is_personal = false
+    local player_manager = Managers.player
+    if player_manager and player == player_manager:local_player(1) then
+        is_personal = true
+    end
+
+    local enabled = is_personal and mod:get("aggro_enable_on_self") or mod:get("aggro_enable_on_teammates")
+    if enabled == false then return nil end
+
+    local aggro_type = AggroDetection.get_aggro_for_unit(unit)
+    if not aggro_type then return nil end
+
+    local type_enabled = mod:get("aggro_" .. aggro_type .. "_enabled")
+    if type_enabled == false then return nil end
+
+    return get_aggro_glow_color(aggro_type)
+end
+
+mod.on_all_mods_loaded = function()
+    local hud_studio = get_mod("hud_studio")
+    if not hud_studio then return end
+
+    hud_studio.register_blocks(mod, {
+        author = "IndicaBunny",
+        blocks = {
+            "scripts/mods/better_downed_indicators/blocks/bdi_status_icon",
+            "scripts/mods/better_downed_indicators/blocks/bdi_backing_circle",
+            "scripts/mods/better_downed_indicators/blocks/bdi_backing_rect",
+            "scripts/mods/better_downed_indicators/blocks/bdi_backing_hex",
+            "scripts/mods/better_downed_indicators/blocks/bdi_aggro_circle",
+            "scripts/mods/better_downed_indicators/blocks/bdi_aggro_rect",
+            "scripts/mods/better_downed_indicators/blocks/bdi_aggro_hex",
+        },
+    })
 end
