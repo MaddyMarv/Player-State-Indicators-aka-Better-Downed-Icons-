@@ -16,38 +16,7 @@ local packages_to_load = {
     "packages/ui/views/talent_builder_view/talent_builder_view",
 }
 
-mod._auspex_active_units = {}
 mod._interaction_active_units = {}
-
-mod:hook_safe(CLASS.AuspexScanningEffects, "_run_searching_sfx_loop", function(self)
-    if self and self._owner_unit then
-        mod._auspex_active_units[self._owner_unit] = true
-    end
-end)
-
-mod:hook_safe(CLASS.AuspexScanningEffects, "_stop_scan_units_effects", function(self)
-    if self and self._owner_unit then
-        mod._auspex_active_units[self._owner_unit] = false
-    end
-end)
-
-mod:hook_safe(CLASS.AuspexScanningEffects, "unwield", function(self)
-    if self and self._owner_unit then
-        mod._auspex_active_units[self._owner_unit] = false
-    end
-end)
-
-mod:hook_safe(CLASS.AuspexEffects, "wield", function(self)
-    if self and self._fx_extension and self._fx_extension._unit then
-        mod._auspex_active_units[self._fx_extension._unit] = true
-    end
-end)
-
-mod:hook_safe(CLASS.AuspexEffects, "unwield", function(self)
-    if self and self._fx_extension and self._fx_extension._unit then
-        mod._auspex_active_units[self._fx_extension._unit] = false
-    end
-end)
 
 local COLOR_WHITE = { 255, 255, 255, 255 }
 local COLOR_YELLOW = { 255, 255, 255, 0 }
@@ -1113,6 +1082,31 @@ mod.on_disabled = _release_packages
 mod.on_unload = _release_packages
 
 -- HUD Studio integration
+local STATUS_KEY_ALIASES = {
+    downed            = "knocked_down",
+    reviving          = "helping",
+    carrying_luggable = "luggable",
+    vortex_grabbed    = "consumed",
+}
+
+local FALLBACK_STATUS_KEYS = {
+    "hogtied",
+    "pounced",
+    "netted",
+    "warp_grabbed",
+    "mutant_charged",
+    "consumed",
+    "vortex_grabbed",
+    "grabbed",
+    "downed",
+    "ledge_hanging",
+    "reviving",
+    "healing",
+    "helping",
+    "interacting",
+    "carrying_luggable",
+}
+
 local function _resolve_status_and_player(status)
     if not mod:is_enabled() then return nil, nil end
     if not status then return nil, nil end
@@ -1226,38 +1220,22 @@ local function _resolve_status_and_player(status)
             end
         end
 
-        if not detected_status then
+        if not detected_status and not (unit and Unit.alive(unit)) then
             local s = (type(status) == "table" and status.state) or status
             if type(s) == "table" then
-                if s.hogtied then
-                    detected_status = "hogtied"
-                elseif s.pounced then
-                    detected_status = "pounced"
-                elseif s.netted then
-                    detected_status = "netted"
-                elseif s.warp_grabbed then
-                    detected_status = "warp_grabbed"
-                elseif s.mutant_charged then
-                    detected_status = "mutant_charged"
-                elseif s.consumed or s.vortex_grabbed then
-                    detected_status = "consumed"
-                elseif s.grabbed then
-                    detected_status = "grabbed"
-                elseif s.downed then
-                    detected_status = "knocked_down"
-                elseif s.ledge_hanging then
-                    detected_status = "ledge_hanging"
-                elseif s.reviving then
-                    detected_status = "helping"
-                elseif s.carrying_luggable then
-                    detected_status = "luggable"
-                elseif (status.device and (status.device.held or status.device.is_equipped)) or s.auspex then
-                    detected_status = "auspex"
-                elseif s.dead then
-                    if s.seconds_until_rescuable and s.seconds_until_rescuable > 0 then
-                        detected_status = "respawning"
-                    else
-                        detected_status = "dead"
+                if s.dead then
+                    detected_status = (s.seconds_until_rescuable and s.seconds_until_rescuable > 0) and "respawning" or "dead"
+                else
+                    for i = 1, #FALLBACK_STATUS_KEYS do
+                        local key = FALLBACK_STATUS_KEYS[i]
+                        if s[key] then
+                            detected_status = STATUS_KEY_ALIASES[key] or key
+                            break
+                        end
+                    end
+
+                    if not detected_status and ((status.device and status.device.is_equipped) or s.auspex) then
+                        detected_status = "auspex"
                     end
                 end
             end
