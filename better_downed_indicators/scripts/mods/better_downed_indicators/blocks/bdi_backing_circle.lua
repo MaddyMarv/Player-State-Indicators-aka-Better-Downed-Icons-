@@ -15,7 +15,7 @@ return {
 			callbacks = {
 				value = {
 					visible = {
-						body = "local get_icon = block.state.status_icon\nvisible = get_icon and get_icon(sources.player_1) ~= nil",
+						body = "local p = sources.player_1\nif p and p.state and p.state.exists == false then visible = false return end\nlocal get_icon = block.state.status_icon\nvisible = get_icon and get_icon(p) ~= nil",
 						kind = "code",
 						source = "player_1",
 					},
@@ -56,5 +56,5 @@ return {
 		body = "if not state.bdi then\n  state.bdi = get_mod(\"better_downed_indicators\")\nend\nif not state.bdi then return end\nstate.status_icon = state.bdi.hud_studio_status_icon",
 	},
 	summary = "Dark circular backdrop for the Better Downed Indicators status icon. Visible only when the player has an active status.",
-	version = 2,
+	version = 3,
 }

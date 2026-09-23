@@ -20,7 +20,7 @@ return {
 						source = "player_1",
 					},
 					visible = {
-						body = "local get_color = block.state.aggro_color\nvisible = get_color and get_color(sources.player_1) ~= nil",
+						body = "local p = sources.player_1\nif p and p.state and p.state.exists == false then visible = false return end\nlocal get_color = block.state.aggro_color\nvisible = get_color and get_color(p) ~= nil",
 						kind = "code",
 						source = "player_1",
 					},
@@ -61,5 +61,5 @@ return {
 		body = "if not state.bdi then\n  state.bdi = get_mod(\"better_downed_indicators\")\nend\nif not state.bdi then return end\nstate.aggro_color = state.bdi.hud_studio_aggro_color",
 	},
 	summary = "Rectangular glowing threat border for Better Downed Indicators. Lights up with attacker-specific colors when targeted by enemies (Snipers, Poxbursters, Disablers, Bosses, etc.).",
-	version = 2,
+	version = 3,
 }

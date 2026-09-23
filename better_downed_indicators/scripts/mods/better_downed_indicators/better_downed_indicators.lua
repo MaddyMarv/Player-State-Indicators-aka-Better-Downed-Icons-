@@ -1182,6 +1182,9 @@ local function _resolve_status_and_player(status)
     end
 
     if type(status) == "table" then
+        if status.state and status.state.exists == false then
+            return nil, nil
+        end
         player = status.player or status._player or (status._data and status._data.player)
         if not player and status.unique_id then
             player = status
