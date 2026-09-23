@@ -1119,13 +1119,17 @@ local function _resolve_status_and_player(status)
 
     local game_mode_manager = Managers.state and Managers.state.game_mode
     local game_mode = game_mode_manager and game_mode_manager:game_mode_name()
-    local is_hub_or_range = (game_mode == "shooting_range" or game_mode == "hub" or game_mode == "prologue")
-    if is_hub_or_range then return nil, nil end
+    local is_hub = (game_mode == "hub" or game_mode == "prologue")
+    if is_hub then return nil, nil end
 
     local detected_status = nil
     local player = nil
     local unit = nil
     local is_personal = false
+
+    if type(status) == "string" then
+        return status, nil
+    end
 
     if type(status) == "number" then
         local player_manager = Managers.player
@@ -1178,7 +1182,10 @@ local function _resolve_status_and_player(status)
     end
 
     if type(status) == "table" then
-        player = status.player or status._player
+        player = status.player or status._player or (status._data and status._data.player)
+        if not player and status.unique_id then
+            player = status
+        end
         unit = status.player_unit or (player and player.player_unit) or status.unit
 
         if not player and not unit then
