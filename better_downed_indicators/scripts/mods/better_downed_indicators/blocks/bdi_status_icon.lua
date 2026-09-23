@@ -8,33 +8,27 @@ return {
 	grid_rows = 0,
 	label = "BDI Status Icon",
 	localizations = {},
-	mod_version = 1,
+	mod_version = 2,
 	name = "bdi_status_icon",
 	nodes = {
 		{
 			callbacks = {
 				value = {
 					material = {
-						body = [[
-							state.bdi = state.bdi or get_mod("better_downed_indicators")
-							material = state.bdi and state.bdi.get_icon(sources.player_1)
-						]],
+						body = "state.bdi = state.bdi or get_mod(\"better_downed_indicators\")\
+material = state.bdi and state.bdi.get_icon(sources.player_1)",
 						kind = "code",
 						source = "player_1",
 					},
 					color = {
-						body = [[
-							state.bdi = state.bdi or get_mod("better_downed_indicators")
-							color = state.bdi and state.bdi.get_color(sources.player_1)
-						]],
+						body = "state.bdi = state.bdi or get_mod(\"better_downed_indicators\")\
+color = state.bdi and state.bdi.get_color(sources.player_1)",
 						kind = "code",
 						source = "player_1",
 					},
 					visible = {
-						body = [[
-							state.bdi = state.bdi or get_mod("better_downed_indicators")
-							visible = state.bdi and state.bdi.should_show(sources.player_1)
-						]],
+						body = "state.bdi = state.bdi or get_mod(\"better_downed_indicators\")\
+visible = state.bdi and state.bdi.should_show(sources.player_1)",
 						kind = "code",
 						source = "player_1",
 					},

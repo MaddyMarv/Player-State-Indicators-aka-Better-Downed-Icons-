@@ -8,17 +8,15 @@ return {
 	grid_rows = 0,
 	label = "BDI Backing - Circle",
 	localizations = {},
-	mod_version = 1,
+	mod_version = 2,
 	name = "bdi_backing_circle",
 	nodes = {
 		{
 			callbacks = {
 				value = {
 					visible = {
-						body = [[
-							state.bdi = state.bdi or get_mod("better_downed_indicators")
-							visible = state.bdi and state.bdi.should_show(sources.player_1)
-						]],
+						body = "state.bdi = state.bdi or get_mod(\"better_downed_indicators\")\
+visible = state.bdi and state.bdi.should_show(sources.player_1)",
 						kind = "code",
 						source = "player_1",
 					},

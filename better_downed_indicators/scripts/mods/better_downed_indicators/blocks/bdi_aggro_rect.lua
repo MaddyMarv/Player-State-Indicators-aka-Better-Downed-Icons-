@@ -8,25 +8,21 @@ return {
 	grid_rows = 0,
 	label = "BDI Aggro Glow - Rectangle",
 	localizations = {},
-	mod_version = 1,
+	mod_version = 2,
 	name = "bdi_aggro_rect",
 	nodes = {
 		{
 			callbacks = {
 				value = {
 					color = {
-						body = [[
-							state.bdi = state.bdi or get_mod("better_downed_indicators")
-							color = state.bdi and state.bdi.get_aggro_color(sources.player_1) or { 0, 255, 255, 255 }
-						]],
+						body = "state.bdi = state.bdi or get_mod(\"better_downed_indicators\")\
+color = state.bdi and state.bdi.get_aggro_color(sources.player_1) or { 0, 255, 255, 255 }",
 						kind = "code",
 						source = "player_1",
 					},
 					visible = {
-						body = [[
-							state.bdi = state.bdi or get_mod("better_downed_indicators")
-							visible = state.bdi and state.bdi.should_show_aggro(sources.player_1)
-						]],
+						body = "state.bdi = state.bdi or get_mod(\"better_downed_indicators\")\
+visible = state.bdi and state.bdi.should_show_aggro(sources.player_1)",
 						kind = "code",
 						source = "player_1",
 					},
