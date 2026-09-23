@@ -16,13 +16,9 @@ return {
 				value = {
 					visible = {
 						body = [[
-local p = sources.player_1
-if p and p.state and p.state.exists == false then
-	visible = false
-else
-	local get_icon = block.state.status_icon
-	visible = (get_icon and get_icon(p) ~= nil) and true or false
-end]],
+							state.bdi = state.bdi or get_mod("better_downed_indicators")
+							visible = state.bdi and state.bdi.should_show(sources.player_1)
+						]],
 						kind = "code",
 						source = "player_1",
 					},
@@ -59,14 +55,7 @@ end]],
 	requires = {
 		"better_downed_indicators",
 	},
-	script = {
-		body = [[
-if not state.bdi then
-	state.bdi = get_mod("better_downed_indicators")
-end
-if not state.bdi then return end
-state.status_icon = state.bdi.hud_studio_status_icon]],
-	},
+
 	summary = "Dark rectangular backdrop for the Better Downed Indicators status icon. Visible only when the player has an active status.",
-	version = 3,
+	version = 2,
 }

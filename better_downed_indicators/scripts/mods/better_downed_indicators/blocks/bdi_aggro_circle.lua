@@ -16,20 +16,17 @@ return {
 				value = {
 					color = {
 						body = [[
-local get_color = block.state.aggro_color
-color = get_color and get_color(sources.player_1) or { 0, 255, 255, 255 }]],
+							state.bdi = state.bdi or get_mod("better_downed_indicators")
+							color = state.bdi and state.bdi.get_aggro_color(sources.player_1) or { 0, 255, 255, 255 }
+						]],
 						kind = "code",
 						source = "player_1",
 					},
 					visible = {
 						body = [[
-local p = sources.player_1
-if p and p.state and p.state.exists == false then
-	visible = false
-else
-	local get_color = block.state.aggro_color
-	visible = (get_color and get_color(p) ~= nil) and true or false
-end]],
+							state.bdi = state.bdi or get_mod("better_downed_indicators")
+							visible = state.bdi and state.bdi.should_show_aggro(sources.player_1)
+						]],
 						kind = "code",
 						source = "player_1",
 					},
@@ -66,14 +63,7 @@ end]],
 	requires = {
 		"better_downed_indicators",
 	},
-	script = {
-		body = [[
-if not state.bdi then
-	state.bdi = get_mod("better_downed_indicators")
-end
-if not state.bdi then return end
-state.aggro_color = state.bdi.hud_studio_aggro_color]],
-	},
+
 	summary = "Circular glowing threat border for Better Downed Indicators. Lights up with attacker-specific colors when targeted by enemies (Snipers, Poxbursters, Disablers, Bosses, etc.).",
-	version = 3,
+	version = 2,
 }

@@ -1182,9 +1182,6 @@ local function _resolve_status_and_player(status)
     end
 
     if type(status) == "table" then
-        if status.state and status.state.exists == false then
-            return nil, nil
-        end
         player = status.player or status._player or (status._data and status._data.player)
         if not player and status.unique_id then
             player = status
@@ -1194,7 +1191,7 @@ local function _resolve_status_and_player(status)
         if not player and not unit then
             local player_manager = Managers.player
             if player_manager then
-                if status.state and status.state.local_player then
+                if (status.state and status.state.local_player) or status.local_player then
                     player = player_manager:local_player(1)
                 elseif status.profile and status.profile.name then
                     local name = status.profile.name
@@ -1213,7 +1210,7 @@ local function _resolve_status_and_player(status)
             local player_manager = Managers.player
             local local_player = player_manager and player_manager:local_player(1)
             is_personal = (player == local_player)
-        elseif status.state and status.state.local_player then
+        elseif (status.state and status.state.local_player) or status.local_player then
             is_personal = true
         end
 
@@ -1284,6 +1281,26 @@ mod.hud_studio_aggro_color = function(status)
     if type_enabled == false then return nil end
 
     return get_aggro_glow_color(aggro_type)
+end
+
+mod.should_show = function(status)
+    return mod.hud_studio_status_icon(status) ~= nil
+end
+
+mod.get_icon = function(status)
+    return mod.hud_studio_status_icon(status)
+end
+
+mod.get_color = function(status)
+    return mod.hud_studio_status_color(status) or { 255, 255, 255, 255 }
+end
+
+mod.should_show_aggro = function(status)
+    return mod.hud_studio_aggro_color(status) ~= nil
+end
+
+mod.get_aggro_color = function(status)
+    return mod.hud_studio_aggro_color(status) or { 0, 255, 255, 255 }
 end
 
 mod.on_all_mods_loaded = function()
