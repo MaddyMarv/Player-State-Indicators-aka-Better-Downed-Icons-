@@ -60,23 +60,39 @@ function Status.for_unit(unit)
     end
 
     local uds = _uds(unit)
+    local cs = uds and uds:read_component("character_state") or nil
     local ds = uds and uds:read_component("disabled_character_state") or nil
-    if ds and ds.is_disabled and ds.disabling_type ~= "none" then
-        local dtype = ds.disabling_type
-        return dtype == "vortex_grabbed" and "consumed" or dtype
+
+    local knocked_down = cs and PlayerUnitStatus.is_knocked_down(cs) or false
+    local hogtied = cs and PlayerUnitStatus.is_hogtied(cs) or false
+    local ledge_hanging = cs and PlayerUnitStatus.is_ledge_hanging(cs) or false
+
+    local pounced = ds and PlayerUnitStatus.is_pounced(ds) or false
+    local netted = ds and PlayerUnitStatus.is_netted(ds) or false
+    local warp_grabbed = ds and PlayerUnitStatus.is_warp_grabbed(ds) or false
+    local mutant_charged = ds and PlayerUnitStatus.is_mutant_charged(ds) or false
+    local consumed = ds and PlayerUnitStatus.is_consumed(ds) or false
+    local grabbed = ds and PlayerUnitStatus.is_grabbed(ds) or false
+
+    local auspex_active = false
+    local scanning_component = _scanning_component(unit)
+    local minigame_state = _minigame_state(unit)
+
+    if scanning_component and scanning_component.is_active then
+        auspex_active = true
+    elseif minigame_state and minigame_state.pocketable_device_active then
+        auspex_active = true
     end
 
-    local cs = uds and uds:read_component("character_state") or nil
-    if cs then
-        local sname = cs.state_name
-        if sname == "hogtied" or sname == "knocked_down" or sname == "ledge_hanging" then
-            return sname
-        end
+    local auspex_mod = get_mod("better_downed_indicators")
+    if auspex_mod and auspex_mod._auspex_active_units and auspex_mod._auspex_active_units[unit] then
+        auspex_active = true
     end
 
     local inventory = _inventory(unit)
-    if inventory and inventory.wielded_slot == "slot_device" then
-        return "auspex"
+    local luggable = false
+    if inventory and inventory.wielded_slot == "slot_luggable" then
+        luggable = true
     end
 
     local interaction_status = nil
@@ -119,13 +135,20 @@ function Status.for_unit(unit)
         end
     end
 
-    if interaction_status then
-        return interaction_status
-    end
-
-    if inventory and inventory.wielded_slot == "slot_luggable" then
-        return "luggable"
-    end
+    if hogtied then return "hogtied" end
+    if pounced then return "pounced" end
+    if netted then return "netted" end
+    if warp_grabbed then return "warp_grabbed" end
+    if mutant_charged then return "mutant_charged" end
+    if consumed then return "consumed" end
+    if grabbed then return "grabbed" end
+    if knocked_down then return "knocked_down" end
+    if ledge_hanging then return "ledge_hanging" end
+    if auspex_active then return "auspex" end
+    if interaction_status == "healing" then return "healing" end
+    if interaction_status == "helping" then return "helping" end
+    if interaction_status == "interacting" then return "interacting" end
+    if luggable then return "luggable" end
 
     return nil
 end

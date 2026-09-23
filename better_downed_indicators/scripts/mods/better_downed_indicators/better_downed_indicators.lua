@@ -16,7 +16,38 @@ local packages_to_load = {
     "packages/ui/views/talent_builder_view/talent_builder_view",
 }
 
+mod._auspex_active_units = {}
 mod._interaction_active_units = {}
+
+mod:hook_safe(CLASS.AuspexScanningEffects, "_run_searching_sfx_loop", function(self)
+    if self and self._owner_unit then
+        mod._auspex_active_units[self._owner_unit] = true
+    end
+end)
+
+mod:hook_safe(CLASS.AuspexScanningEffects, "_stop_scan_units_effects", function(self)
+    if self and self._owner_unit then
+        mod._auspex_active_units[self._owner_unit] = false
+    end
+end)
+
+mod:hook_safe(CLASS.AuspexScanningEffects, "unwield", function(self)
+    if self and self._owner_unit then
+        mod._auspex_active_units[self._owner_unit] = false
+    end
+end)
+
+mod:hook_safe(CLASS.AuspexEffects, "wield", function(self)
+    if self and self._fx_extension and self._fx_extension._unit then
+        mod._auspex_active_units[self._fx_extension._unit] = true
+    end
+end)
+
+mod:hook_safe(CLASS.AuspexEffects, "unwield", function(self)
+    if self and self._fx_extension and self._fx_extension._unit then
+        mod._auspex_active_units[self._fx_extension._unit] = false
+    end
+end)
 
 local COLOR_WHITE = { 255, 255, 255, 255 }
 local COLOR_YELLOW = { 255, 255, 255, 0 }
@@ -1082,31 +1113,6 @@ mod.on_disabled = _release_packages
 mod.on_unload = _release_packages
 
 -- HUD Studio integration
-local STATUS_KEY_ALIASES = {
-    downed            = "knocked_down",
-    reviving          = "helping",
-    carrying_luggable = "luggable",
-    vortex_grabbed    = "consumed",
-}
-
-local FALLBACK_STATUS_KEYS = {
-    "hogtied",
-    "pounced",
-    "netted",
-    "warp_grabbed",
-    "mutant_charged",
-    "consumed",
-    "vortex_grabbed",
-    "grabbed",
-    "downed",
-    "ledge_hanging",
-    "reviving",
-    "healing",
-    "helping",
-    "interacting",
-    "carrying_luggable",
-}
-
 local function _resolve_status_and_player(status)
     if not mod:is_enabled() then return nil, nil end
     if not status then return nil, nil end
@@ -1217,27 +1223,6 @@ local function _resolve_status_and_player(status)
             local is_hub_or_range = (game_mode == "shooting_range" or game_mode == "hub" or game_mode == "prologue")
             if not is_hub_or_range then
                 detected_status = detect_death_or_respawn_status(player, true, true)
-            end
-        end
-
-        if not detected_status and not (unit and Unit.alive(unit)) then
-            local s = (type(status) == "table" and status.state) or status
-            if type(s) == "table" then
-                if s.dead then
-                    detected_status = (s.seconds_until_rescuable and s.seconds_until_rescuable > 0) and "respawning" or "dead"
-                else
-                    for i = 1, #FALLBACK_STATUS_KEYS do
-                        local key = FALLBACK_STATUS_KEYS[i]
-                        if s[key] then
-                            detected_status = STATUS_KEY_ALIASES[key] or key
-                            break
-                        end
-                    end
-
-                    if not detected_status and ((status.device and status.device.is_equipped) or s.auspex) then
-                        detected_status = "auspex"
-                    end
-                end
             end
         end
 
