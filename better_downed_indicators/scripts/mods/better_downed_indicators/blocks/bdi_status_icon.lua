@@ -15,17 +15,28 @@ return {
 			callbacks = {
 				value = {
 					material = {
-						body = "local get_icon = block.state.status_icon\nmaterial = get_icon and get_icon(sources.player_1) or nil",
+						body = [[
+local get_icon = block.state.status_icon
+material = get_icon and get_icon(sources.player_1) or nil]],
 						kind = "code",
 						source = "player_1",
 					},
 					color = {
-						body = "local get_color = block.state.status_color\ncolor = get_color and get_color(sources.player_1) or { 255, 255, 255, 255 }",
+						body = [[
+local get_color = block.state.status_color
+color = get_color and get_color(sources.player_1) or { 255, 255, 255, 255 }]],
 						kind = "code",
 						source = "player_1",
 					},
 					visible = {
-						body = "local p = sources.player_1\nif p and p.state and p.state.exists == false then visible = false return end\nlocal get_icon = block.state.status_icon\nvisible = get_icon and get_icon(p) ~= nil",
+						body = [[
+local p = sources.player_1
+if p and p.state and p.state.exists == false then
+	visible = false
+else
+	local get_icon = block.state.status_icon
+	visible = (get_icon and get_icon(p) ~= nil) and true or false
+end]],
 						kind = "code",
 						source = "player_1",
 					},
@@ -63,7 +74,13 @@ return {
 		"better_downed_indicators",
 	},
 	script = {
-		body = "if not state.bdi then\n  state.bdi = get_mod(\"better_downed_indicators\")\nend\nif not state.bdi then return end\nstate.status_icon = state.bdi.hud_studio_status_icon\nstate.status_color = state.bdi.hud_studio_status_color",
+		body = [[
+if not state.bdi then
+	state.bdi = get_mod("better_downed_indicators")
+end
+if not state.bdi then return end
+state.status_icon = state.bdi.hud_studio_status_icon
+state.status_color = state.bdi.hud_studio_status_color]],
 	},
 	summary = "Displays the Better Downed Indicators status icon for a player. Requires Better Downed Indicators.",
 	version = 3,

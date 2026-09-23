@@ -15,12 +15,21 @@ return {
 			callbacks = {
 				value = {
 					color = {
-						body = "local get_color = block.state.aggro_color\ncolor = get_color and get_color(sources.player_1) or { 0, 255, 255, 255 }",
+						body = [[
+local get_color = block.state.aggro_color
+color = get_color and get_color(sources.player_1) or { 0, 255, 255, 255 }]],
 						kind = "code",
 						source = "player_1",
 					},
 					visible = {
-						body = "local p = sources.player_1\nif p and p.state and p.state.exists == false then visible = false return end\nlocal get_color = block.state.aggro_color\nvisible = get_color and get_color(p) ~= nil",
+						body = [[
+local p = sources.player_1
+if p and p.state and p.state.exists == false then
+	visible = false
+else
+	local get_color = block.state.aggro_color
+	visible = (get_color and get_color(p) ~= nil) and true or false
+end]],
 						kind = "code",
 						source = "player_1",
 					},
@@ -58,7 +67,12 @@ return {
 		"better_downed_indicators",
 	},
 	script = {
-		body = "if not state.bdi then\n  state.bdi = get_mod(\"better_downed_indicators\")\nend\nif not state.bdi then return end\nstate.aggro_color = state.bdi.hud_studio_aggro_color",
+		body = [[
+if not state.bdi then
+	state.bdi = get_mod("better_downed_indicators")
+end
+if not state.bdi then return end
+state.aggro_color = state.bdi.hud_studio_aggro_color]],
 	},
 	summary = "Hexagonal glowing threat border for Better Downed Indicators. Lights up with attacker-specific colors when targeted by enemies (Snipers, Poxbursters, Disablers, Bosses, etc.).",
 	version = 3,
