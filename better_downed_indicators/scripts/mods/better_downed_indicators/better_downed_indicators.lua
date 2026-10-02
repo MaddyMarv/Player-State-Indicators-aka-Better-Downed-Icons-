@@ -1089,24 +1089,24 @@ mod:hook_require("scripts/ui/hud/elements/world_markers/templates/world_marker_t
     end
 end)
 
-local _packages_loaded = false
+local _package_ids = {}
 
 mod.on_enabled = function()
-    if not _packages_loaded then
+    if #_package_ids == 0 and Managers.package then
         for _, package_path in ipairs(packages_to_load) do
-            Managers.package:load(package_path, mod:get_name(), nil, true)
+            local id = Managers.package:load(package_path, mod:get_name(), nil, true)
+            _package_ids[#_package_ids + 1] = id
         end
-        _packages_loaded = true
     end
 end
 
 local function _release_packages()
-    if _packages_loaded then
-        for _, package_path in ipairs(packages_to_load) do
-            Managers.package:release(package_path, mod:get_name())
+    if Managers.package then
+        for _, id in ipairs(_package_ids) do
+            Managers.package:release(id)
         end
-        _packages_loaded = false
     end
+    _package_ids = {}
 end
 
 mod.on_disabled = _release_packages
