@@ -818,6 +818,10 @@ mod.on_settings_reset = function()
 end
 
 mod.update = function(dt)
+    if not mod:is_enabled() then
+        return
+    end
+
     AggroDetection.scan(dt)
 end
 
@@ -1089,28 +1093,25 @@ mod:hook_require("scripts/ui/hud/elements/world_markers/templates/world_marker_t
     end
 end)
 
-local _package_ids = {}
-
 mod.on_enabled = function()
-    if #_package_ids == 0 and Managers.package then
-        for _, package_path in ipairs(packages_to_load) do
-            local id = Managers.package:load(package_path, mod:get_name(), nil, true)
-            _package_ids[#_package_ids + 1] = id
-        end
-    end
-end
-
-local function _release_packages()
     if Managers.package then
-        for _, id in ipairs(_package_ids) do
-            Managers.package:release(id)
+        for _, package_path in ipairs(packages_to_load) do
+            Managers.package:load(package_path, mod:get_name(), nil, true)
         end
     end
-    _package_ids = {}
 end
 
-mod.on_disabled = _release_packages
-mod.on_unload = _release_packages
+local function _cleanup_state()
+    AggroDetection.clear()
+end
+
+mod.on_disabled = function(is_first_call)
+	_cleanup_state()
+end
+
+mod.on_unload = function(exit_game)
+	_cleanup_state()
+end
 
 -- HUD Studio integration
 local function _resolve_status_and_player(status)
